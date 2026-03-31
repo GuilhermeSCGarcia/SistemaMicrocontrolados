@@ -40,6 +40,7 @@ MAIOR EQU 0x20000501
 MENOR EQU 0x20000502 
 QTDELEMENTOS EQU 0x20000503 
 VARIANCIA EQU 0x20000504 
+RAIZ_INTEIRA EQU 0x20000506
 
 Start
 ; Comece o código aqui <======================================================
@@ -154,7 +155,7 @@ LOOP6
 ;calculando a variância
 	UDIV R4,R4,R10
 	LDR R0, =VARIANCIA
-	STRB R4, [R10] ; ESCREVE A VARIÂNCIA NA MEMÓRIA RAM
+	STRH R4, [R0] ; ESCREVE A VARIÂNCIA NA MEMÓRIA RAM
 	
 ; achando a parte inteira da raiz
 ; R4 já têm a variância
@@ -171,6 +172,8 @@ loop7  ;--> ACHANDO A PARTE INTEIRA DA RAIZ
 	;resposta: a parte inteira da raiz é:
 	SUB R0,R0,#2 ;/um por causa do ADD depois da multiplicação (para o próximo) e outro porque passsou do valor que eu queria
 	
+	LDR R1,=RAIZ_INTEIRA
+	STRB R0,[R1]
 
 	NOP
     ALIGN                           ; garante que o fim da seção está alinhada 

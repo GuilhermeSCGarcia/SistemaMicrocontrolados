@@ -39,7 +39,7 @@ MEDIA EQU 0x20000500
 MAIOR EQU 0x20000501 
 MENOR EQU 0x20000502 
 QTDELEMENTOS EQU 0x20000503 
-DESVIO EQU 0x20000504 
+VARIANCIA EQU 0x20000504 
 
 Start
 ; Comece o código aqui <======================================================
@@ -131,6 +131,47 @@ loop5
 	LDR R1, =MENOR
 	STRB R3, [R1]
 	
+;calculando a variância
+;PRÉ-loop6
+	LDR R6, =QTDELEMENTOS
+	LDRB R10, [R6] ; R10 É A QUANTIDADE DE ELEMNTOS VÁLIDOS
+	LDR R7, =MEDIA
+	LDRB R9, [R7] ; R9 É A MEDIA DOS VALORES
+	
+	MOV R5,#0 ; R5 É O CONTADOR
+	LDR R0, =VETOR
+	
+LOOP6
+	LDRB R1, [R0] ; R1 SÃO OS ELEMENTOS DO VETOR
+	ADD R5, #1 ; INCREMENTA O CONTADOR
+	SUB R2, R9,R1 ; R2  <== MÉDIA - VALOR_ATUAL
+	MUL R3, R2, R2 ; R3 <== R2*R2
+	ADD R4,R4,R3 ; R4 <== R3 + R4 /// VAI ACUMULANDO A VARIANCIA PARCIAL
+	ADD R0, #1 ; INCREMENTAO ENDEREÇO PARA A PRÓXIMA POSIÇÃO DE MEMÓRIA
+	CMP R5,R10 ;<== R5-R10 quando for igual eu não quero continur o loop, pois eu já contei 15 elementos
+	BLO LOOP6
+	
+;calculando a variância
+	UDIV R4,R4,R10
+	LDR R0, =VARIANCIA
+	STRB R4, [R10] ; ESCREVE A VARIÂNCIA NA MEMÓRIA RAM
+	
+; achando a parte inteira da raiz
+; R4 já têm a variância
+
+;pre-loop7
+	MOV R0, #1
+	
+loop7  ;--> ACHANDO A PARTE INTEIRA DA RAIZ
+	MUL R1,R0,R0
+	ADD R0,#1
+	CMP R1,R4
+	BLS loop7
+	
+	;resposta: a parte inteira da raiz é:
+	SUB R0,R0,#2 ;/um por causa do ADD depois da multiplicação (para o próximo) e outro porque passsou do valor que eu queria
+	
+
 	NOP
     ALIGN                           ; garante que o fim da seção está alinhada 
     END                             ; fim do arquivo

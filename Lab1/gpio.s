@@ -125,7 +125,7 @@ tabela
 		EXPORT PortJ_Input          ; Permite chamar PortJ_Input de outro arquivo
 		
 		EXPORT GPIOPortJ_Handler	
-		EXPORT Escreve_Display1
+		EXPORT Escreve_Display
 		IMPORT  SysTick_Wait1ms
 
 ;--------------------------------------------------------------------------------
@@ -312,26 +312,113 @@ EsperaGPIO  LDR     R1, [R0]						;Lê da memória o conteúdo do endereço do regis
 	BX LR
 ;--------------------------------------------------------------------------------
 ;Função de acender o display
-Escreve_Display1
-	LDR R1, =GPIO_PORTP_AHB_DATA_R     ;desliga o port PP5 dos leds
-	MOV R2, #2_000000
-	STR R2, [R1]
+Escreve_Display
+	PUSH {LR}
+;	MOV R1, R10
+;	MOV R2, R9
+;	MOV R3, R8
+;	BX LR
 	
+	LDR R4, =GPIO_PORTP_AHB_DATA_R     ;desliga o port PP5 dos leds
+	MOV R5, #2_000000
+	STR R5, [R4]
+	
+	;R0 -- VALOR TODO DO DISPLAY -- NÍVEL ATUAL
+	MOV R2, #10
+	UDIV R1, R0, R2
+	MUL R2, R1, R2
+	SUB R2, R0, R2
+	;R1 - DEZENA
+	;R2 - UNIDADE
+	;=============== BLOCO DA DEZENA ============================================
 	LDR R3, =tabela                    ;pego o endereço da tabela
-	LDR	R1, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
-	LDRB R2, [R3,#1]                   ;coloco no R2 o valor total pra acender 1
-	AND  R4, R2, #0x0F                 ;sobra no R4 só o últimos 4 bits
-	STR R4, [R1]                       ;escreve os 4 bits no port A
+	LDR	R4, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
+	LDRB R5, [R3,R1]                   ;coloco no R2 o valor total pra acender 1, COM A VARIÁVEL R1
+	AND  R7, R5, #0xF0                 ; estava 0x0F ;sobra no R8 só o últimos 4 bits
+	STR R7, [R4]                       ;escreve os 4 bits no port A
 	
-	LDR R1, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
-	AND R4, R2, #0xF0                  ;sobra no R4 só os primeiros 4 bits
-	LSR R4, R4, #4                     ;desloco pra ficarem no final
-	STR R4, [R1]                       ;escreve os 4 bits no port Q
+	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
+	AND R7, R5, #0x0F                  ; estava 0xF0;sobra no R7 só os primeiros 4 bits
+	;LSR R7, R7, #4                     ;desloco pra ficarem no final, COM A VARIÁVEL R1
+	STR R7, [R4]                       ;escreve os 4 bits no port Q
 	
-	LDR R1, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
-	MOV R2, #2_110000                  ;escolho se quero o B4 ou o B5
-	STR R2, [R1]
+	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
+	MOV R5, #2_010000                  
+	STR R5, [R4]					   ; ativa o B4
 	
+	MOV R4, R0
+	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
+	BL SysTick_Wait1ms
+	MOV R0, R4 						   ; guardando todo o valor 
+	
+	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
+	MOV R5, #2_000000                  
+	STR R5, [R4]					   ;desligo o transistor
+	
+	MOV R4, R0
+	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR DESLIGADO
+	BL SysTick_Wait1ms
+	MOV R0, R4 
+	
+	;=============== BLOCO DA UNIDADE ============================================
+	LDR R3, =tabela                    ;pego o endereço da tabela
+	LDR	R4, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
+	LDRB R5, [R3,R2]                   ;coloco no R2 o valor total pra acender 1, COM A VARIÁVEL R1
+	AND  R7, R5, #0xF0                 ; estava 0x0F ;sobra no R7 só o últimos 4 bits
+	STR R7, [R4]                       ;escreve os 4 bits no port A
+	
+	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
+	AND R7, R5, #0x0F                  ; estava 0xF0;sobra no R8 só os primeiros 4 bits
+	;LSR R7, R7, #4                     ;desloco pra ficarem no final, COM A VARIÁVEL R1
+	STR R7, [R4]                       ;escreve os 4 bits no port Q
+	
+	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
+	MOV R5, #2_100000                  
+	STR R5, [R4]					   ; ativa B5
+	
+	MOV R4, R0
+	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
+	BL SysTick_Wait1ms
+	MOV R0, R4 						   ; guardando todo o valor 
+	
+	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
+	MOV R5, #2_000000                  ;desligo o transistor
+	STR R5, [R4]
+	
+	MOV R4, R0
+	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR DESLIGADO
+	BL SysTick_Wait1ms
+	MOV R0, R4 
+
+	;=============== BLOCO DOS LEDS ============================================
+	MOV R0, R8						   ; pego o nível desejado e coloco em R0
+	LDR	R4, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
+	AND  R7, R0, #0xF0                 ; estava 0x0F ;sobra no R8 só o últimos 4 bits
+	STR R7, [R4]                       ;escreve os 4 bits no port A
+	
+	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
+	AND R7, R0, #0x0F                  ; estava 0xF0;sobra no R8 só os primeiros 4 bits
+	STR R7, [R4]                       ;escreve os 4 bits no port Q
+	
+	LDR R4, =GPIO_PORTP_AHB_DATA_R     ;pego o endereço do port P
+	MOV R5, #2_100000                  
+	STR R5, [R4]					   ; ativa B5
+	
+	MOV R4, R0
+	MOV R0, #1                         ;Chamar a rotina para esperar 
+	BL SysTick_Wait1ms
+	MOV R0, R4 						   ; guardando todo o valor 
+	
+	LDR R4, =GPIO_PORTP_AHB_DATA_R     ;pego o endereço do port B
+	MOV R5, #2_000000                  
+	STR R5, [R4]					   ;desligo o transistor
+	
+	MOV R4, R0
+	MOV R0, #5                         ;Chamar a rotina para esperar 5ms, COM O TRANSISTOR DESLIGADO
+	BL SysTick_Wait1ms
+	MOV R0, R4 
+	
+	POP {LR}
 	BX LR
 
 ; -------------------------------------------------------------------------------
@@ -406,7 +493,13 @@ APAGALED
 	BL PortN_Output	
 	POP{LR}
 	BX LR
-		
+; O QUE FALTA FAZER:
+; arrumar a função de interrupção dos botões para aumentar o diminuir o nível desejado
+; a função de interrupção vai ter que resetar o iterador do ciclo para QUANT_CICLOS
+; e chamar a função de atualizar os displays  -- VAI TER QUE CONFERIR SE O REGISTRADOR R9 NÃO SER PASSADO DURANTE A INTERRUPÇÃO
+; ou seja, se o código da interrupção, ele vai ter acesso ao R8 do código principal
+
+; ainda falta a função de acender o led da placa, e chamar no main
 
     ALIGN                           ; garante que o fim da seção está alinhada 
     END                             ; fim do arquivo

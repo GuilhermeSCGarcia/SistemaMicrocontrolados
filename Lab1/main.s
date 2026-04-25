@@ -14,7 +14,9 @@
 ;<NOME>         EQU <VALOR>
 ; ========================
 ; Definições de Valores
-
+QUANT_CICLOS			EQU	   5
+NIVEL_ATUAL				EQU    60
+NIVEL_DESEJADO			EQU    50
 
 ; -------------------------------------------------------------------------------
 ; Área de Dados - Declarações de variáveis
@@ -44,18 +46,50 @@
 		IMPORT  GPIO_Init
         IMPORT  PortN_Output
         IMPORT  PortJ_Input	
-		IMPORT  Escreve_Display1
+		IMPORT  Escreve_Display
 
 
 ; -------------------------------------------------------------------------------
 ; Função main()
 Start  		
-	BL PLL_Init                  ;Chama a subrotina para alterar o clock do microcontrolador para 80MHz
-	BL SysTick_Init              ;Chama a subrotina para inicializar o SysTick
-	BL GPIO_Init                 ;Chama a subrotina que inicializa os GPIO
+	;BL PLL_Init                  ;Chama a subrotina para alterar o clock do microcontrolador para 80MHz
+	;BL SysTick_Init              ;Chama a subrotina para inicializar o SysTick
+	;BL GPIO_Init                 ;Chama a subrotina que inicializa os GPIO
+	MOV R10, #QUANT_CICLOS; R10 para ser a ITERADOR de ciclo (conta o atraso)
+	MOV R9, #NIVEL_ATUAL; R9 para ser o valor do nível atual
+	MOV R8, #NIVEL_DESEJADO; R8 para ser o valor do nível desejado
+	
+	BL Escreve_Display; o R10 deve vir com o valor a ser exibido no display; TODO
+	SUB R10, R10, #1
 
 MainLoop
-	BL Escreve_Display1
+	; FALTA FAZER A VERIFICAÇÃO (acender um e apagar outro | acender os dois) DOS LEDS PN1 E PN0, de acordo com os níveis
+	CMP R9,R8 
+	IT LO  ; R9 < R8?
+	ADDLO R9, R9, #1
+	
+	CMP R9,R8 
+	IT GT  ; R9 > R8?
+	SUBGT R9, R9, #1
+	;FUNÇÃO PARA ACENDER OS LEDS DO PN1, 
+	
+	CMP R9,R8 
+	IT EQ  ; R9 == R8?
+	MOVEQ R5,R5
+	; LIGAR OS DOIS LEDS
+	
+DECREMENTA_CONTADOR
+	MOV R0, #10                        ;Chamar a rotina para esperar 10ms
+	;BL SysTick_Wait1ms
+	SUB R10, R10, #1
+	CMP R10, #1
+	BNE DECREMENTA_CONTADOR
+	MOV R0, R9
+	BL Escreve_Display
+	MOV R10, #QUANT_CICLOS
+	
+	
+
 	B MainLoop 
 	
 

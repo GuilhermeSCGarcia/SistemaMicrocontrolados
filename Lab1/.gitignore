@@ -1,0 +1,19 @@
+# Pastas geradas automaticamente
+Objects/
+Listings/
+
+# Arquivos compilados
+*.axf
+*.hex
+*.map
+*.o
+*.d
+
+# Arquivos temporários / backup
+*.bak
+*.tmp
+
+# Outros comuns do Keil
+*.uvguix.*
+*.uvoptx
+*.uvprojx

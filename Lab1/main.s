@@ -14,8 +14,8 @@
 ;<NOME>         EQU <VALOR>
 ; ========================
 ; Definições de Valores
-QUANT_CICLOS			EQU	   5
-NIVEL_ATUAL				EQU    60
+QUANT_CICLOS			EQU	   8
+NIVEL_ATUAL				EQU    10
 NIVEL_DESEJADO			EQU    50
 
 ; -------------------------------------------------------------------------------
@@ -52,9 +52,9 @@ NIVEL_DESEJADO			EQU    50
 ; -------------------------------------------------------------------------------
 ; Função main()
 Start  		
-	;BL PLL_Init                  ;Chama a subrotina para alterar o clock do microcontrolador para 80MHz
-	;BL SysTick_Init              ;Chama a subrotina para inicializar o SysTick
-	;BL GPIO_Init                 ;Chama a subrotina que inicializa os GPIO
+	BL PLL_Init                  ;Chama a subrotina para alterar o clock do microcontrolador para 80MHz
+	BL SysTick_Init              ;Chama a subrotina para inicializar o SysTick
+	BL GPIO_Init                 ;Chama a subrotina que inicializa os GPIO
 	MOV R10, #QUANT_CICLOS        ; R10 para ser a ITERADOR de ciclo (conta o atraso)
 	MOV R9, #NIVEL_ATUAL          ; R9 para ser o valor do nível atual
 	MOV R8, #NIVEL_DESEJADO       ; R8 para ser o valor do nível desejado
@@ -84,7 +84,7 @@ MainLoop
 	
 DECREMENTA_CONTADOR
 	MOV R0, #10                       ;Chamar a rotina para esperar 10ms
-	;BL SysTick_Wait1ms
+	BL SysTick_Wait1ms
 	SUB R10, R10, #1
 	CMP R10, #1
 	BNE DECREMENTA_CONTADOR

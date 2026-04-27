@@ -9,7 +9,7 @@
 ; -------------------------------------------------------------------------------
 ; Declarações EQU - Defines
 ; ========================
-QUANT_CICLOS			EQU	   5
+QUANT_CICLOS			EQU	   8
 ; ========================
 ; Definições dos Registradores Gerais
 SYSCTL_RCGCGPIO_R	 EQU	0x400FE608
@@ -242,7 +242,7 @@ EsperaGPIO  LDR     R1, [R0]						;Lê da memória o conteúdo do endereço do regis
             STR     R1, [R0]							;Escreve no registrador da memória funcionalidade digital 
  
             LDR     R0, =GPIO_PORTJ_AHB_DEN_R			;Carrega o endereço do DEN
-			MOV     R1, #2_00000000                     ;Ativa os pinos PJ0 e PJ1 como I/O Digital      
+			MOV     R1, #2_00000011                     ;Ativa os pinos PJ0 e PJ1 como I/O Digital      
             STR     R1, [R0]                            ;Escreve no registrador da memória funcionalidade digital
 			
 			LDR     R0, =GPIO_PORTA_AHB_DEN_R			;Carrega o endereço do DEN
@@ -268,22 +268,22 @@ EsperaGPIO  LDR     R1, [R0]						;Lê da memória o conteúdo do endereço do regis
             STR     R1, [R0]							;Escreve no registrador da memória do resistor de pull-up
 			
 ; coisas das interrupções
-; 8. Não sabemos
+; 8. Habilita a interrupção
             LDR     R0, =GPIO_PORTJ_AHB_IM_R
 			MOV		R1, #0
 			STR 	R1, [R0]
 			
-; 9. Alguma coisa pra borda
+; 9. Borda ou nível
             LDR     R0, =GPIO_PORTJ_AHB_IS_R
 			MOV		R1, #0
 			STR 	R1, [R0]
 			
-; 10. Alguma coisa pra borda
+; 10. Uma borda ou ambas as bordas
             LDR     R0, =GPIO_PORTJ_AHB_IBE_R
 			MOV		R1, #0
 			STR 	R1, [R0]
 			
-; 11. Alguma coisa pra borda
+; 11. ABorda de descida ou borda de subida
             LDR     R0, =GPIO_PORTJ_AHB_IEV_R
 			MOV		R1, #0
 			STR 	R1, [R0]
@@ -315,10 +315,6 @@ EsperaGPIO  LDR     R1, [R0]						;Lê da memória o conteúdo do endereço do regis
 ;Função de acender o display
 Escreve_Display
 	PUSH {LR}
-;	MOV R1, R10
-;	MOV R2, R9
-;	MOV R3, R8
-;	BX LR
 	
 	LDR R4, =GPIO_PORTP_AHB_DATA_R     ;desliga o port PP5 dos leds
 	MOV R5, #2_000000
@@ -326,6 +322,7 @@ Escreve_Display
 	
 	;R0 -- VALOR TODO DO DISPLAY -- NÍVEL ATUAL
 	MOV R2, #10
+	MOV R0, R9
 	UDIV R1, R0, R2
 	MUL R2, R1, R2
 	SUB R2, R0, R2
@@ -340,7 +337,6 @@ Escreve_Display
 	
 	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
 	AND R7, R5, #0x0F                  ;sobra no R7 só os bits da direita
-	;LSR R7, R7, #4                    ;desloco pra ficarem no final, COM A VARIÁVEL R1
 	STR R7, [R4]                       ;escreve os 4 bits no port Q
 	
 	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
@@ -348,9 +344,9 @@ Escreve_Display
 	STR R5, [R4]					   ;ativa o B4 que é o da dezena
 	
 	MOV R4, R0
-	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
+	MOV R0, #30                        ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
 	BL SysTick_Wait1ms
-	MOV R0, R4 						   ; guardando todo o valor 
+	MOV R0, R4 						   ;guardando todo o valor 
 	
 	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
 	MOV R5, #2_000000                  
@@ -370,17 +366,16 @@ Escreve_Display
 	
 	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
 	AND R7, R5, #0x0F                  ;sobra no R7 só os bits da direita
-	;LSR R7, R7, #4                     ;desloco pra ficarem no final, COM A VARIÁVEL R2
 	STR R7, [R4]                       ;escreve os 4 bits no port Q
 	
 	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
 	MOV R5, #2_100000                  
-	STR R5, [R4]					   ; ativa B5 que é o da unidade
+	STR R5, [R4]					   ;ativa B5 que é o da unidade
 	
 	MOV R4, R0
-	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
+	MOV R0, #30                        ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
 	BL SysTick_Wait1ms
-	MOV R0, R4 						   ; guardando todo o valor 
+	MOV R0, R4 						   ;guardando todo o valor 
 	
 	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
 	MOV R5, #2_000000                  ;desligo o transistor
@@ -406,7 +401,7 @@ Escreve_Display
 	STR R5, [R4]					   ; ativa P5 que é o transistor dos leds
 	
 	MOV R4, R0
-	MOV R0, #1                         ;Chamar a rotina para esperar 
+	MOV R0, #20                         ;Chamar a rotina para esperar 
 	BL SysTick_Wait1ms
 	MOV R0, R4 						   ;guardando todo o valor 
 	
@@ -415,7 +410,7 @@ Escreve_Display
 	STR R5, [R4]					   ;desligo o transistor
 	
 	MOV R4, R0
-	MOV R0, #5                         ;Chamar a rotina para esperar 5ms, COM O TRANSISTOR DESLIGADO
+	MOV R0, #10                         ;Chamar a rotina para esperar 5ms, COM O TRANSISTOR DESLIGADO
 	BL SysTick_Wait1ms
 	MOV R0, R4 
 	
@@ -482,7 +477,7 @@ INCREMENTANIVEL
 	CMP R8, #99
 	IT LO
 	ADDLO R8, R8, #1
-	BL Escreve_Display                   ;atualiza msm que não mudou, será que perde tempo?
+	BL Escreve_Display
 	MOV R10, #QUANT_CICLOS
 	POP{LR}
 	BX LR

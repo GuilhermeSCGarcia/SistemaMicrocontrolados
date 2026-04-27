@@ -9,6 +9,7 @@
 ; -------------------------------------------------------------------------------
 ; Declarações EQU - Defines
 ; ========================
+QUANT_CICLOS			EQU	   5
 ; ========================
 ; Definições dos Registradores Gerais
 SYSCTL_RCGCGPIO_R	 EQU	0x400FE608
@@ -460,41 +461,41 @@ PINOJO                                      ;PJ0 foi pressionado
 	MOV R1, #2_01
 	STR R1, [R0]
 	PUSH{LR}
-	BL ACENDELED                            ;incrementa o valor desejado em 1 (máx 99)
+	BL INCREMENTANIVEL                      ;incrementa o valor desejado em 1 (máx 99)
 	POP{LR}
 	B FIMINTERRUPT
 PINOJ1                                      ;PJ1 foi pressionado
 	CMP R1, #2_10
-	BNE FIMINTERRUPT                        ;se pressionou os dois não faz nada
+	BNE FIMINTERRUPT                        ;se for #2_11 então pressionou os dois e não faz nada
 	LDR R0,=GPIO_PORTJ_AHB_ICR_R
 	MOV R1, #2_10
 	STR R1, [R0]
 	PUSH{LR}
-	BL APAGALED                             ;decrementa o valor desejado em 1 (mín 10)
+	BL DECREMENTANIVEL                      ;decrementa o valor desejado em 1 (mín 10)
 	POP{LR}
 	B FIMINTERRUPT
 FIMINTERRUPT
 	BX LR
 		
-ACENDELED
+INCREMENTANIVEL
 	PUSH{LR}
-	MOV R0, #2_00000010			 
-	BL PortN_Output	
+	CMP R8, #99
+	IT LO
+	ADDLO R8, R8, #1
+	BL Escreve_Display                   ;atualiza msm que não mudou, será que perde tempo?
+	MOV R10, #QUANT_CICLOS
 	POP{LR}
 	BX LR
 	
-APAGALED
+DECREMENTANIVEL
 	PUSH{LR}
-	MOV R0, #0                   
-	BL PortN_Output	
+	CMP R8, #10
+	IT GT
+	SUBGT R8, R8, #1
+	BL Escreve_Display
+	MOV R10, #QUANT_CICLOS
 	POP{LR}
 	BX LR
-	
-; O QUE FALTA FAZER:
-; arrumar a função de interrupção dos botões para aumentar o diminuir o nível desejado
-; a função de interrupção vai ter que resetar o iterador do ciclo para QUANT_CICLOS
-; e chamar a função de atualizar os displays  -- VAI TER QUE CONFERIR SE O REGISTRADOR R9 NÃO SER PASSADO DURANTE A INTERRUPÇÃO
-; ou seja, se o código da interrupção, ele vai ter acesso ao R8 do código principal
 
 
     ALIGN                           ; garante que o fim da seção está alinhada 

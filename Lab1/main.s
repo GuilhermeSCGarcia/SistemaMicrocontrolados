@@ -55,12 +55,12 @@ Start
 	;BL PLL_Init                  ;Chama a subrotina para alterar o clock do microcontrolador para 80MHz
 	;BL SysTick_Init              ;Chama a subrotina para inicializar o SysTick
 	;BL GPIO_Init                 ;Chama a subrotina que inicializa os GPIO
-	MOV R10, #QUANT_CICLOS; R10 para ser a ITERADOR de ciclo (conta o atraso)
-	MOV R9, #NIVEL_ATUAL; R9 para ser o valor do nível atual
-	MOV R8, #NIVEL_DESEJADO; R8 para ser o valor do nível desejado
+	MOV R10, #QUANT_CICLOS        ; R10 para ser a ITERADOR de ciclo (conta o atraso)
+	MOV R9, #NIVEL_ATUAL          ; R9 para ser o valor do nível atual
+	MOV R8, #NIVEL_DESEJADO       ; R8 para ser o valor do nível desejado
 	
-	BL Escreve_Display; o R10 deve vir com o valor a ser exibido no display; TODO
-	SUB R10, R10, #1  ;decrementa o R10
+	BL Escreve_Display            ; o R10 deve vir com o valor a ser exibido no display; TODO
+	SUB R10, R10, #1              ;decrementa o R10
 
 MainLoop
 	CMP R9, R8 
@@ -78,12 +78,12 @@ MainLoop
 	IT GT                             ;R9 > R8
 	MOVGT R0, #2_00000010             ;quero acender o PN1
 	IT EQ                             ;R9 = R8
-	MOVEQ R0, #2_00000011           ;quero acender o PN0 e PN1
+	MOVEQ R0, #2_00000011             ;quero acender o PN0 e PN1
 	
 	BL PortN_Output                   ;função que acende o(s) led(s)
 	
 DECREMENTA_CONTADOR
-	MOV R0, #10                        ;Chamar a rotina para esperar 10ms
+	MOV R0, #10                       ;Chamar a rotina para esperar 10ms
 	;BL SysTick_Wait1ms
 	SUB R10, R10, #1
 	CMP R10, #1

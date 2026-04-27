@@ -60,23 +60,27 @@ Start
 	MOV R8, #NIVEL_DESEJADO; R8 para ser o valor do nível desejado
 	
 	BL Escreve_Display; o R10 deve vir com o valor a ser exibido no display; TODO
-	SUB R10, R10, #1
+	SUB R10, R10, #1  ;decrementa o R10
 
 MainLoop
-	; FALTA FAZER A VERIFICAÇÃO (acender um e apagar outro | acender os dois) DOS LEDS PN1 E PN0, de acordo com os níveis
-	CMP R9,R8 
+	CMP R9, R8 
 	IT LO  ; R9 < R8?
-	ADDLO R9, R9, #1
+	ADDLO R9, R9, #1                ;aumenta pra mais perto do valor desejado
 	
-	CMP R9,R8 
+	CMP R9, R8
 	IT GT  ; R9 > R8?
-	SUBGT R9, R9, #1
-	;FUNÇÃO PARA ACENDER OS LEDS DO PN1, 
+	SUBGT R9, R9, #1                ;diminui pra mais perto do valor desejado
 	
-	CMP R9,R8 
-	IT EQ  ; R9 == R8?
-	MOVEQ R5,R5
-	; LIGAR OS DOIS LEDS
+	CMP R9, R8
+	
+	IT LO                             ;R9 < R8
+	MOVLO R0, #2_00000001             ;quero acender o PN0
+	IT GT                             ;R9 > R8
+	MOVGT R0, #2_00000010             ;quero acender o PN1
+	IT EQ                             ;R9 = R8
+	MOVEQ R0, #2_00000011           ;quero acender o PN0 e PN1
+	
+	BL PortN_Output                   ;função que acende o(s) led(s)
 	
 DECREMENTA_CONTADOR
 	MOV R0, #10                        ;Chamar a rotina para esperar 10ms
@@ -84,11 +88,9 @@ DECREMENTA_CONTADOR
 	SUB R10, R10, #1
 	CMP R10, #1
 	BNE DECREMENTA_CONTADOR
-	MOV R0, R9
+	MOV R0, R9                         ;move o nível atual pro R0 pra mostrar no display
 	BL Escreve_Display
 	MOV R10, #QUANT_CICLOS
-	
-	
 
 	B MainLoop 
 	

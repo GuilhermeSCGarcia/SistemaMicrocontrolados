@@ -333,18 +333,18 @@ Escreve_Display
 	;=============== BLOCO DA DEZENA ============================================
 	LDR R3, =tabela                    ;pego o endereço da tabela
 	LDR	R4, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
-	LDRB R5, [R3,R1]                   ;coloco no R2 o valor total pra acender 1, COM A VARIÁVEL R1
-	AND  R7, R5, #0xF0                 ; estava 0x0F ;sobra no R8 só o últimos 4 bits
+	LDRB R5, [R3,R1]                   ;coloco no R5 o valor total pra acender 1, COM A VARIÁVEL R1
+	AND  R7, R5, #0xF0                 ;sobra no R7 os bits da esquerda
 	STR R7, [R4]                       ;escreve os 4 bits no port A
 	
 	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
-	AND R7, R5, #0x0F                  ; estava 0xF0;sobra no R7 só os primeiros 4 bits
-	;LSR R7, R7, #4                     ;desloco pra ficarem no final, COM A VARIÁVEL R1
+	AND R7, R5, #0x0F                  ;sobra no R7 só os bits da direita
+	;LSR R7, R7, #4                    ;desloco pra ficarem no final, COM A VARIÁVEL R1
 	STR R7, [R4]                       ;escreve os 4 bits no port Q
 	
 	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
 	MOV R5, #2_010000                  
-	STR R5, [R4]					   ; ativa o B4
+	STR R5, [R4]					   ;ativa o B4 que é o da dezena
 	
 	MOV R4, R0
 	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
@@ -363,18 +363,18 @@ Escreve_Display
 	;=============== BLOCO DA UNIDADE ============================================
 	LDR R3, =tabela                    ;pego o endereço da tabela
 	LDR	R4, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
-	LDRB R5, [R3,R2]                   ;coloco no R2 o valor total pra acender 1, COM A VARIÁVEL R1
-	AND  R7, R5, #0xF0                 ; estava 0x0F ;sobra no R7 só o últimos 4 bits
+	LDRB R5, [R3,R2]                   ;coloco no R5 o valor total pra acender 1, COM A VARIÁVEL R2
+	AND  R7, R5, #0xF0                 ;sobra no R5 os bits da esquerda
 	STR R7, [R4]                       ;escreve os 4 bits no port A
 	
 	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
-	AND R7, R5, #0x0F                  ; estava 0xF0;sobra no R8 só os primeiros 4 bits
-	;LSR R7, R7, #4                     ;desloco pra ficarem no final, COM A VARIÁVEL R1
+	AND R7, R5, #0x0F                  ;sobra no R7 só os bits da direita
+	;LSR R7, R7, #4                     ;desloco pra ficarem no final, COM A VARIÁVEL R2
 	STR R7, [R4]                       ;escreve os 4 bits no port Q
 	
 	LDR R4, =GPIO_PORTB_AHB_DATA_R     ;pego o endereço do port B
 	MOV R5, #2_100000                  
-	STR R5, [R4]					   ; ativa B5
+	STR R5, [R4]					   ; ativa B5 que é o da unidade
 	
 	MOV R4, R0
 	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
@@ -391,23 +391,23 @@ Escreve_Display
 	MOV R0, R4 
 
 	;=============== BLOCO DOS LEDS ============================================
-	MOV R0, R8						   ; pego o nível desejado e coloco em R0
+	MOV R0, R8						   ;pego o nível desejado e coloco em R0
 	LDR	R4, =GPIO_PORTA_AHB_DATA_R     ;pego o endereço do port A
-	AND  R7, R0, #0xF0                 ; estava 0x0F ;sobra no R8 só o últimos 4 bits
+	AND  R7, R0, #0xF0                 ;sobra no R5 os bits da esquerda
 	STR R7, [R4]                       ;escreve os 4 bits no port A
 	
 	LDR R4, =GPIO_PORTQ_AHB_DATA_R     ;pego o endereço do port Q
-	AND R7, R0, #0x0F                  ; estava 0xF0;sobra no R8 só os primeiros 4 bits
+	AND R7, R0, #0x0F                  ;sobra no R7 só os bits da direita
 	STR R7, [R4]                       ;escreve os 4 bits no port Q
 	
 	LDR R4, =GPIO_PORTP_AHB_DATA_R     ;pego o endereço do port P
 	MOV R5, #2_100000                  
-	STR R5, [R4]					   ; ativa B5
+	STR R5, [R4]					   ; ativa P5 que é o transistor dos leds
 	
 	MOV R4, R0
 	MOV R0, #1                         ;Chamar a rotina para esperar 
 	BL SysTick_Wait1ms
-	MOV R0, R4 						   ; guardando todo o valor 
+	MOV R0, R4 						   ;guardando todo o valor 
 	
 	LDR R4, =GPIO_PORTP_AHB_DATA_R     ;pego o endereço do port B
 	MOV R5, #2_000000                  
@@ -423,7 +423,7 @@ Escreve_Display
 
 ; -------------------------------------------------------------------------------
 ; Função PortN_Output
-; Parâmetro de entrada: 
+; Parâmetro de entrada: R0?
 ; Parâmetro de saída: Não tem
 PortN_Output
 ; ****************************************
@@ -431,9 +431,9 @@ PortN_Output
 ; ****************************************
 	LDR	R1, =GPIO_PORTN_AHB_DATA_R
 	LDR R2, [R1]
-	BIC R2, #2_00000010
-	ORR R0, R0, R2
-	STR R0, [R1]
+	BIC R2, #2_00000011               ;Primeiro limpamos os dois bits do lido da porta R2 = R2 & 11111100
+	ORR R0, R0, R2                    ;Fazer o OR do lido pela porta com o parâmetro de entrada
+	STR R0, [R1]                      ;Escreve na porta N o barramento de dados dos pinos N0 e N1
 		
 	BX LR
 ; -------------------------------------------------------------------------------
@@ -452,31 +452,27 @@ PortJ_Input
 	
 GPIOPortJ_Handler
 	LDR R0, =GPIO_PORTJ_AHB_MIS_R 
-	LDR R1, [R0] ;vê se alguma chave foi pressionada
+	LDR R1, [R0]                            ;vê se alguma chave foi pressionada
 	CMP R1, #2_01
-	BNE PINOJ1
-PINOJO
-	LDR R0,=GPIO_PORTJ_AHB_ICR_R ; ACK da interrupção
+	BNE PINOJ1                              
+PINOJO                                      ;PJ0 foi pressionado
+	LDR R0,=GPIO_PORTJ_AHB_ICR_R            ;ACK da interrupção
 	MOV R1, #2_01
 	STR R1, [R0]
 	PUSH{LR}
-	BL ACENDELED
+	BL ACENDELED                            ;incrementa o valor desejado em 1 (máx 99)
 	POP{LR}
 	B FIMINTERRUPT
-PINOJ1
+PINOJ1                                      ;PJ1 foi pressionado
 	CMP R1, #2_10
-	BNE AMBOSPINOS
+	BNE FIMINTERRUPT                        ;se pressionou os dois não faz nada
 	LDR R0,=GPIO_PORTJ_AHB_ICR_R
 	MOV R1, #2_10
 	STR R1, [R0]
 	PUSH{LR}
-	BL APAGALED
+	BL APAGALED                             ;decrementa o valor desejado em 1 (mín 10)
 	POP{LR}
 	B FIMINTERRUPT
-AMBOSPINOS
-	LDR R0,=GPIO_PORTJ_AHB_ICR_R
-	MOV R1, #2_11
-	STR R1, [R0]
 FIMINTERRUPT
 	BX LR
 		
@@ -493,13 +489,13 @@ APAGALED
 	BL PortN_Output	
 	POP{LR}
 	BX LR
+	
 ; O QUE FALTA FAZER:
 ; arrumar a função de interrupção dos botões para aumentar o diminuir o nível desejado
 ; a função de interrupção vai ter que resetar o iterador do ciclo para QUANT_CICLOS
 ; e chamar a função de atualizar os displays  -- VAI TER QUE CONFERIR SE O REGISTRADOR R9 NÃO SER PASSADO DURANTE A INTERRUPÇÃO
 ; ou seja, se o código da interrupção, ele vai ter acesso ao R8 do código principal
 
-; ainda falta a função de acender o led da placa, e chamar no main
 
     ALIGN                           ; garante que o fim da seção está alinhada 
     END                             ; fim do arquivo

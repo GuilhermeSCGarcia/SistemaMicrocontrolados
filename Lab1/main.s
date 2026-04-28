@@ -14,7 +14,7 @@
 ;<NOME>         EQU <VALOR>
 ; ========================
 ; Definições de Valores
-QUANT_CICLOS			EQU	   8
+QUANT_CICLOS			EQU	   84
 NIVEL_ATUAL				EQU    10
 NIVEL_DESEJADO			EQU    50
 
@@ -83,8 +83,7 @@ MainLoop
 	BL PortN_Output                   ;função que acende o(s) led(s)
 	
 DECREMENTA_CONTADOR
-	MOV R0, #10                       ;Chamar a rotina para esperar 10ms
-	BL SysTick_Wait1ms
+	BL Escreve_Display
 	SUB R10, R10, #1
 	CMP R10, #1
 	BNE DECREMENTA_CONTADOR

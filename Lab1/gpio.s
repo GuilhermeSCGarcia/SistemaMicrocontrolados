@@ -9,7 +9,7 @@
 ; -------------------------------------------------------------------------------
 ; Declarações EQU - Defines
 ; ========================
-QUANT_CICLOS			EQU	   8
+QUANT_CICLOS			EQU	   84
 ; ========================
 ; Definições dos Registradores Gerais
 SYSCTL_RCGCGPIO_R	 EQU	0x400FE608
@@ -344,7 +344,7 @@ Escreve_Display
 	STR R5, [R4]					   ;ativa o B4 que é o da dezena
 	
 	MOV R4, R0
-	MOV R0, #30                        ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
+	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
 	BL SysTick_Wait1ms
 	MOV R0, R4 						   ;guardando todo o valor 
 	
@@ -373,7 +373,7 @@ Escreve_Display
 	STR R5, [R4]					   ;ativa B5 que é o da unidade
 	
 	MOV R4, R0
-	MOV R0, #30                        ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
+	MOV R0, #1                         ;Chamar a rotina para esperar 1ms, COM O TRANSISTOR ATIVO
 	BL SysTick_Wait1ms
 	MOV R0, R4 						   ;guardando todo o valor 
 	
@@ -401,7 +401,7 @@ Escreve_Display
 	STR R5, [R4]					   ; ativa P5 que é o transistor dos leds
 	
 	MOV R4, R0
-	MOV R0, #20                         ;Chamar a rotina para esperar 
+	MOV R0, #1                         ;Chamar a rotina para esperar 
 	BL SysTick_Wait1ms
 	MOV R0, R4 						   ;guardando todo o valor 
 	
@@ -410,7 +410,7 @@ Escreve_Display
 	STR R5, [R4]					   ;desligo o transistor
 	
 	MOV R4, R0
-	MOV R0, #10                         ;Chamar a rotina para esperar 5ms, COM O TRANSISTOR DESLIGADO
+	MOV R0, #1                         ;Chamar a rotina para esperar 5ms, COM O TRANSISTOR DESLIGADO
 	BL SysTick_Wait1ms
 	MOV R0, R4 
 	

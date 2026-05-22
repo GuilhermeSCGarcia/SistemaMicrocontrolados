@@ -36,9 +36,12 @@ int main(void)
 	SysTick_Init();
 	GPIO_Init();
 	LCD_Init();
+	//fazer o motor init pra configurar o PWM e essas coisas
+	// temporizador init talvez??
+	
 	while(1)
 	{
-		int modo; //modo atual 
+		Modos modo; //modo atual 
 		//máquina de estados
 		switch (modo)
 		{ 

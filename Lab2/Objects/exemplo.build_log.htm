@@ -5,7 +5,7 @@
 <h2>Tool Versions:</h2>
 IDE-Version: µVision V5.36.0.0
 Copyright (C) 2021 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: Laura Oliveira, UTFPR, LIC=----
+License Information: Guilherme Garcia, UTFPR, LIC=----
  
 Tool Versions:
 Toolchain:       MDK-Lite  Version: 5.36.0.0
@@ -21,21 +21,23 @@ Target DLL:      lmidk-agdi.dll V???
 Dialog DLL:      TCM.DLL V1.53.0.0
  
 <h2>Project:</h2>
-C:\Users\laura\OneDrive\Documentos\Micro\LCDTeclado\exemplo.uvprojx
-Project File Date:  05/05/2026
+C:\Users\Garcias\Documents\Micro\SistemaMicrocontrolados\Lab2\exemplo.uvprojx
+Project File Date:  05/22/2026
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Target 1'
-compiling gpio.c...
-gpio.c(104): warning:  #61-D: integer operation result is out of range
-  	NVIC_PRI12_R = 5 << 29;
-gpio.c(104): warning:  #68-D: integer conversion resulted in a change of sign
-  	NVIC_PRI12_R = 5 << 29;
-gpio.c: 2 warnings, 0 errors
+compiling main.c...
+main.c(24): warning:  #1295-D: Deprecated declaration pulaLinha - give arg types
+  void pulaLinha();
+main.c(25): warning:  #1295-D: Deprecated declaration retornarCursor - give arg types
+  void retornarCursor();
+main.c(33): warning:  #1295-D: Deprecated declaration varreTeclado - give arg types
+  int varreTeclado();
+main.c: 3 warnings, 0 errors
 linking...
-Program Size: Code=2388 RO-data=32 RW-data=8 ZI-data=1120  
-".\Objects\exemplo.axf" - 0 Error(s), 2 Warning(s).
+Program Size: Code=2680 RO-data=32 RW-data=8 ZI-data=1120  
+".\Objects\exemplo.axf" - 0 Error(s), 3 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -45,7 +47,7 @@ Package Vendor: Keil
                 Texas Instruments Tiva C Series Device Support and Examples
 
 <h2>Collection of Component include folders:</h2>
-  C:\Users\laura\AppData\Local\Arm\Packs\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C129
+  C:\Users\Garcias\AppData\Local\Arm\Packs\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C129
 
 <h2>Collection of Component Files used:</h2>
 Build Time Elapsed:  00:00:00

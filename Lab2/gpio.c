@@ -10,11 +10,12 @@
 
 #define GPIO_PORTK   (0x0200) //bit 10
 #define GPIO_PORTL   (0x0400) //bit 11
-#define GPIO_PORTM   (0x0800) //bit 13     
+#define GPIO_PORTM   (0x0800) //bit 13
 
 void SysTick_Init(void);
 void SysTick_Wait1ms(uint32_t delay);
 void SysTick_Wait1us(uint32_t delay);
+
 
 // -------------------------------------------------------------------------------
 // Função GPIO_Init
@@ -59,8 +60,7 @@ void GPIO_Init(void)
 	// Parte dos temporizadores
 	
 	// 1. Ativar o clock do temporizador 
-	SYSCTL_RCGCTIMER_R = 0x01;     // timer 0
-	SYSCTL_RCGCTIMER_R = 0x04;     // timer 2
+	SYSCTL_RCGCTIMER_R = 0x05;     // timer 0 e timer 2
 	// 1. Verificar o bit do temporizador respectivo no registrador PRTIMER para saber se está pronto para o uso
 	while (SYSCTL_PRTIMER_R != 0x05) {}; //pro 0 e 2 ao mesmo tempo
 		
@@ -161,7 +161,24 @@ void escreveLCD(int valor)
 // Parâmetro de saída: Não tem
 void pulaLinha()
 {
+	
+	
 	GPIO_PORTK_DATA_R = 0xC0;
+	GPIO_PORTM_DATA_R = 0x04;
+	SysTick_Wait1us(10);
+	GPIO_PORTM_DATA_R = 0x00;
+	SysTick_Wait1ms(2);
+	
+	return;
+}
+// -------------------------------------------------------------------------------
+// Função retornarCursor
+// Retorna o cursor ao início
+// Parâmetro de entrada: Não tem
+// Parâmetro de saída: Não tem
+void retornarCursor()
+{
+	GPIO_PORTK_DATA_R = 0x80;
 	GPIO_PORTM_DATA_R = 0x04;
 	SysTick_Wait1us(10);
 	GPIO_PORTM_DATA_R = 0x00;
@@ -325,5 +342,8 @@ void Timer2A_Handler ()
 	TIMER2_ICR_R = 0x01;
 	//faz o que tem que fazer
 }
+
+
+
 
 

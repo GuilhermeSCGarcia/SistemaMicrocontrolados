@@ -306,7 +306,7 @@ DELAY1US EQU 80    ; número de ciclos de clock para contar 1ms (assumindo 80 MHz
 	               ; 80000 x 12,5 ns = 1 ms
 
 SysTick_Wait1us
-	PUSH {R4, LR} 						; salva o valor atual de R4 e Link Register
+ 	PUSH {R4, LR} 						; salva o valor atual de R4 e Link Register
 	MOVS R4, R0 						; R4 = R0  numEsperasRestantes com atualização dos flags
 	BEQ SysTick_Wait1us_done 			; Se o numEsperasRestantes == 0, vai para o fim
 SysTick_Wait1us_loop					

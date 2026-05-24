@@ -16,20 +16,25 @@ void SysTick_Init(void);
 void SysTick_Wait1ms(uint32_t delay);
 void SysTick_Wait1us(uint32_t delay);
 
+int porta = 0;
+int angulo = 0;
+int duty = 40000;
+int cima_ou_baixo = 1;
+
 
 // -------------------------------------------------------------------------------
-// Função GPIO_Init
+// Funï¿½ï¿½o GPIO_Init
 // Inicializa os ports L, M e K
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void GPIO_Init(void)
 {
 	//1a. Ativar o clock para a porta setando o bit correspondente no registrador RCGCGPIO
 	SYSCTL_RCGCGPIO_R = ( GPIO_PORTK | GPIO_PORTL | GPIO_PORTM);
-	//1b.   após isso verificar no PRGPIO se a porta está pronta para uso.
+	//1b.   apï¿½s isso verificar no PRGPIO se a porta estï¿½ pronta para uso.
   while((SYSCTL_PRGPIO_R & ( GPIO_PORTK | GPIO_PORTL | GPIO_PORTM) ) != (GPIO_PORTK | GPIO_PORTL | GPIO_PORTM) ){};
 	
-	// 2. Limpar o AMSEL para desabilitar a analógica
+	// 2. Limpar o AMSEL para desabilitar a analï¿½gica
 	GPIO_PORTK_AMSEL_R = 0x00;
 	GPIO_PORTM_AMSEL_R = 0x00;
 	GPIO_PORTL_AMSEL_R = 0x00;
@@ -39,12 +44,12 @@ void GPIO_Init(void)
 	GPIO_PORTM_PCTL_R = 0x00;
 	GPIO_PORTL_PCTL_R = 0x00;
 
-	// 4. DIR para 0 se for entrada, 1 se for saída
-	GPIO_PORTK_DIR_R = 0xFF; // BITS K0, K1, K2, K3, K4, K5, K6 e K7 (saída pro LCD)
-	GPIO_PORTM_DIR_R = 0x07; // BITS M0, M1, M2 (saída pro LCD) e M4, M5, M6, M7 (entrada pro teclado) (antes estava F7)
-	GPIO_PORTL_DIR_R = 0x10; // BITS L0, L1, L2, L3 (entrada pro teclado) e L4 (saída pro motor)
+	// 4. DIR para 0 se for entrada, 1 se for saï¿½da
+	GPIO_PORTK_DIR_R = 0xFF; // BITS K0, K1, K2, K3, K4, K5, K6 e K7 (saï¿½da pro LCD)
+	GPIO_PORTM_DIR_R = 0x07; // BITS M0, M1, M2 (saï¿½da pro LCD) e M4, M5, M6, M7 (entrada pro teclado) (antes estava F7)
+	GPIO_PORTL_DIR_R = 0x10; // BITS L0, L1, L2, L3 (entrada pro teclado) e L4 (saï¿½da pro motor)
 		
-	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem função alternativa	
+	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem funï¿½ï¿½o alternativa	
 	GPIO_PORTK_AFSEL_R = 0x00;
 	GPIO_PORTM_AFSEL_R = 0x00;
 	GPIO_PORTL_AFSEL_R = 0x00;
@@ -60,57 +65,57 @@ void GPIO_Init(void)
 	// Parte dos temporizadores
 	
 	// 1. Ativar o clock do temporizador 
-	SYSCTL_RCGCTIMER_R = 0x05;     // timer 0 e timer 2
-	// 1. Verificar o bit do temporizador respectivo no registrador PRTIMER para saber se está pronto para o uso
+	SYSCTL_RCGCTIMER_R = 0x05;           // timer 0 e timer 2
+	// 1. Verificar o bit do temporizador respectivo no registrador PRTIMER para saber se estï¿½ pronto para o uso
 	while (SYSCTL_PRTIMER_R != 0x05) {}; //pro 0 e 2 ao mesmo tempo
 		
 	// 2. Habilita timer A ou B
-	TIMER0_CTL_R = 0x00;					 // Habilitando o 0A
+	TIMER0_CTL_R = 0x00;		   // Habilitando o 0A
 	TIMER2_CTL_R = 0x00;           // Habilitando o 2A
 		
-	// 3. Configura de quantos bits será a contagem (16 bits = 0x04 e 32 bits = 0x00)
+	// 3. Configura de quantos bits serï¿½ a contagem (16 bits = 0x04 e 32 bits = 0x00)
 	TIMER0_CFG_R = 0x00;           //Habilitando 32 bits
 	TIMER2_CFG_R = 0x00;           //Habilitando 32 bits
 		
-	// 4. Configura modo de operação (Oneshot = 0x1 e Periódico 0x2)
-	TIMER0_TAMR_R = 0x02;           //Habilitando 0A em periódico
-	TIMER2_TAMR_R = 0x02;           //Habilitando 2A em periódico
+	// 4. Configura modo de operaï¿½ï¿½o (Oneshot = 0x1 e Periï¿½dico 0x2)
+	TIMER0_TAMR_R = 0x02;           //Habilitando 0A em periï¿½dico
+	TIMER2_TAMR_R = 0x02;           //Habilitando 2A em periï¿½dico
 		
-	// 5. Valor que o timer começa a vai diminuindo (Se 32 bits usa só o TAILR, se timer B como 16 bits usa TBILR também)
+	// 5. Valor que o timer comeï¿½a a vai diminuindo (Se 32 bits usa sï¿½ o TAILR, se timer B como 16 bits usa TBILR tambï¿½m)
 	TIMER0_TAILR_R = 55999999;      
 	TIMER2_TAILR_R = 55999999;
 		
-	// 6. Registrador de preescala, só usar se for 16 bits, 32 deixa zerado. A (TAPR) e B (TBPR)
+	// 6. Registrador de preescala, sï¿½ usar se for 16 bits, 32 deixa zerado. A (TAPR) e B (TBPR)
 	TIMER0_TAPR_R = 0x00;
 	TIMER2_TAPR_R = 0x00;
 		
-	// 7. Limpa a interrupção (ACK) (escreve 1 onde quer limpar!!)
+	// 7. Limpa a interrupï¿½ï¿½o (ACK) (escreve 1 onde quer limpar!!)
 	TIMER0_ICR_R = 0x01;            //Limpa pro timer 0A
 	TIMER2_ICR_R = 0x01;            //Limpa pro timer 2A
 		
-	// 8a. Controla a interrupção 
-	TIMER0_IMR_R = 0x01;				   //Habilita interrupção no timer 0A
-	TIMER2_IMR_R = 0x01;           //Habilita interrupção no timer 2A
+	// 8a. Controla a interrupï¿½ï¿½o 
+	TIMER0_IMR_R = 0x01;				   //Habilita interrupï¿½ï¿½o no timer 0A
+	TIMER2_IMR_R = 0x01;           //Habilita interrupï¿½ï¿½o no timer 2A
 	
-	// 8b. Seta a prioridade da interrupção
-	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 tá no PRI4 e move 29 posições pra setar prioridade 4
-	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 tá no PRI5 e move 29 posições pra setar prioridade 4
+	// 8b. Seta a prioridade da interrupï¿½ï¿½o
+	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 tï¿½ no PRI4 e move 29 posiï¿½ï¿½es pra setar prioridade 4
+	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 tï¿½ no PRI5 e move 29 posiï¿½ï¿½es pra setar prioridade 4
 	
-	// 8c. Habilitar a interrupção do timer respectivo no respectivo registrador
+	// 8c. Habilitar a interrupï¿½ï¿½o do timer respectivo no respectivo registrador
 	NVIC_EN0_R = 1 << 19;          // 0A numero 19
 	NVIC_EN0_R |= 1 << 23;         // | pra manter o que coloquei antes, 2A numero 23
 	
-	// 9. Coloca 1 pra habilitar e começar a contagem
+	// 9. Coloca 1 pra habilitar e comeï¿½ar a contagem
 	TIMER0_CTL_R = 0x01;
-	TIMER2_CTL_R = 0x01;
+	TIMER2_CTL_R = 0x00;           // comeÃ§a desligado
 	
 }	
 
 // -------------------------------------------------------------------------------
-// Função LCD_Init
+// Funï¿½ï¿½o LCD_Init
 // Inicializa o LCD
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void LCD_Init ()
 {
 	GPIO_PORTK_DATA_R = 0x38;
@@ -141,10 +146,10 @@ void LCD_Init ()
 }
 
 // -------------------------------------------------------------------------------
-// Função escreveLCD
+// Funï¿½ï¿½o escreveLCD
 // Escreve no LCD
-// Parâmetro de entrada: Valor que quer escrever (uma letra/número por vez)
-// Parâmetro de saída: Não tem
+// Parï¿½metro de entrada: Valor que quer escrever (uma letra/nï¿½mero por vez)
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void escreveLCD(int valor)
 {
 	GPIO_PORTK_DATA_R = valor;
@@ -155,10 +160,10 @@ void escreveLCD(int valor)
 }
 
 // -------------------------------------------------------------------------------
-// Função pulaLinha
+// Funï¿½ï¿½o pulaLinha
 // Pula pra outra linha do LCD
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void pulaLinha()
 {
 	
@@ -172,10 +177,10 @@ void pulaLinha()
 	return;
 }
 // -------------------------------------------------------------------------------
-// Função retornarCursor
-// Retorna o cursor ao início
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Funï¿½ï¿½o retornarCursor
+// Retorna o cursor ao inï¿½cio
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void retornarCursor()
 {
 	GPIO_PORTK_DATA_R = 0x80;
@@ -188,10 +193,10 @@ void retornarCursor()
 }
 
 // -------------------------------------------------------------------------------
-// Função varreTeclado
+// Funï¿½ï¿½o varreTeclado
 // Varre o teclado vendo qual tecla foi pressionada
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Tecla pressionada ou 'F' se nenhuma
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Tecla pressionada ou 'F' se nenhuma
 int varreTeclado()
 {
 	GPIO_PORTM_DIR_R &= 0x0F;
@@ -320,27 +325,59 @@ int varreTeclado()
 }
 
 // -------------------------------------------------------------------------------
-// Função Iimer0A_Handler
-// Lida com a interrupção do timer 0A (do PWM)
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Funï¿½ï¿½o Iimer0A_Handler
+// Lida com a interrupï¿½ï¿½o do timer 0A (do PWM)
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void Timer0A_Handler () 
 {
-	//limpando o ack da interrupção
+	//limpando o ack da interrupï¿½ï¿½o
 	TIMER0_ICR_R = 0x01;
-	//faz o que tem que fazer
+	
+    if(porta == 1) // estava ligada e vai desligar
+	{
+		porta = 0; // desliguei
+
+		// manda pra baixo o PL4 pra desligar o motor (mas deixando o que estava antes do teclado)
+		GPIO_PORTL_DATA_R &= ~0x10; 
+		// espera 20 ms - duty
+		TIMER0_TAILR_R = 1600000 - duty; // (20 ms - duty)
+	}
+	else // estava desligada e vai ligar
+	{
+		porta = 1; // liguei
+		// // manda pra alta o PL4 (mas deixando o que estava antes do teclado)
+		GPIO_PORTL_DATA_R |= 0x10;
+		// espera duty
+		TIMER0_TAILR_R = duty;
+	}
 }
 
 // -------------------------------------------------------------------------------
-// Função Timer2A_Handler
-// Lida com a interrupção do timer 2A
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Funï¿½ï¿½o Timer2A_Handler
+// Lida com a interrupï¿½ï¿½o do timer 2A
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void Timer2A_Handler () 
 {
-	//limpando o ack da interrupção
+	//limpando o ack da interrupï¿½ï¿½o
 	TIMER2_ICR_R = 0x01;
-	//faz o que tem que fazer
+	
+	angulo += (20 * cima_ou_baixo);
+
+	if (angulo >= 180)
+	{	
+		angulo = 180; // cheguei em cima
+		cima_ou_baixo = -1; // comeÃ§o a ir pra baixo
+	}
+
+	if (angulo <= 0)
+	{	
+		angulo = 0; // cheguei em baixo
+		cima_ou_baixo = 1; // comeÃ§o a ir pra cima
+	}
+
+	duty = 40000 + (angulo * 889);
 }
 
 

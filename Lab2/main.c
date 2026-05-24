@@ -5,20 +5,20 @@
 // Prof. Guilherme Peron
 
 #include <stdint.h>
-
+#include "tm4c1294ncpdt.h"
 
 //Constantes
 #define DISPLAY_X 16 //tamanho X do display
 #define DISPLAY_Y 2 //tamanho Y do display
 
-// Funções básicas
+// Funï¿½ï¿½es bï¿½sicas
 void PLL_Init(void);
 void SysTick_Init(void);
 void SysTick_Wait1ms(uint32_t delay);
 void SysTick_Wait1us(uint32_t delay);
 void GPIO_Init(void);
 
-// Funções do LCD
+// Funï¿½ï¿½es do LCD
 void LCD_Init (void);
 void escreveLCD(int valor);
 void pulaLinha();
@@ -27,52 +27,83 @@ void printLCD(char c[]);
 void mostrarInformacao(char c1[], char c2[]);
 
 
-//Funções do Sistema
+//Funï¿½ï¿½es do Sistema
 void colocarEstado(int tecla);
-// Função do Teclado
+
+// Funï¿½ï¿½o do Teclado
 int varreTeclado();
 
-// Estado da máquina de estados
+// Variaveis Globais do gpio
+extern int porta;
+extern int angulo;
+extern int duty;
+extern int cima_ou_baixo;
+
+// Estado da mï¿½quina de estados
 typedef enum estados
 {
 	ModoIdle,
-	ModoServo,
 	ModoPosicao,
 	ModoScan
 } Modos;
 
 //Variaveis Globais
-Modos modo = ModoIdle; // inicia a máquina de estados
-int tecla = '*';  //guarda a tecla, coloca o valor padrão de *, que é o modo Idle
+Modos modo = ModoIdle; // inicia a mï¿½quina de estados
+int tecla = '*';  //guarda a tecla, coloca o valor padrï¿½o de *, que ï¿½ o modo Idle
 
 int main(void)
 {
 	PLL_Init();
 	SysTick_Init();
-	GPIO_Init();
+	GPIO_Init(); // jÃ¡ faz o init dos temporizadores tambÃ©m!!
 	LCD_Init();
-	//fazer o motor init pra configurar o PWM e essas coisas
-	// temporizador init talvez??
 	
 	while(1)
 	{
 		//modo atual 
-		//máquina de estados
+		//mï¿½quina de estados
 		mostrarInformacao("-","-"); // mostra o modo atual escolhido
 		tecla = varreTeclado(); // busca a tecla escolhida no teclado
 		colocarEstado(tecla); // muda o estado
 		switch (modo)
 		{
 			case ModoIdle:
-				break;
-			
-			case ModoServo:
+				// deliga o timer 2A
+				TIMER2_CTL_R &= ~0x01;
+
+				angulo = 90;
+				calculaDuty(angulo);
 				break;
 			
 			case ModoPosicao:
+				// deliga o timer 2A
+				TIMER2_CTL_R &= ~0x01;
+
+				if (tecla == 0)
+				{
+					angulo = 180;
+				}
+				else 
+				{
+					angulo = (tecla - 1) * 20;
+				}
+
+				calculaDuty(angulo);
+				int pos;
+				pos = ((0.5 + angulo * 0.01) * 1000);
+				mostrarInformacao(angulo, pos);
 				break;
 			
 			case ModoScan:
+				angulo = 0;
+				calculaDuty(angulo);
+
+				//ligo o timer 2A
+				TIMER2_CTL_R |= 0x01; 
+
+				int pos;
+				pos = ((0.5 + angulo * 0.01) * 1000);
+				mostrarInformacao(angulo, pos);
 				break;
 		}
 	};
@@ -80,9 +111,8 @@ int main(void)
 }
 
 
-
 // -------------------------------------------------------------------------------
-//Função escreveLCD
+//Funï¿½ï¿½o escreveLCD
 //Lida com a escrita no LCD
 void printLCD(char c[])
 {	
@@ -92,7 +122,7 @@ void printLCD(char c[])
 }
 
 // -------------------------------------------------------------------------------
-//Função escreveLCD
+//Funï¿½ï¿½o escreveLCD
 //Lida com a escrita no LCD
 void mostrarInformacao(char pos[], char pulso[])
 {	
@@ -104,13 +134,13 @@ void mostrarInformacao(char pos[], char pulso[])
 	return;
 	}
 	
-	if(modo ==  ModoPosicao) // se o modo escolhido for o de posição, mostra a posição e o pulso
+	if(modo ==  ModoPosicao) // se o modo escolhido for o de posiï¿½ï¿½o, mostra a posiï¿½ï¿½o e o pulso
 	{
 		printLCD("Modo Posicao");
 		pulaLinha();
 		printLCD("Pos:");
 		printLCD(pos);
-		printLCD("° /");
+		printLCD("ï¿½ /");
 		printLCD(pulso);
 		printLCD(" us");
 		return;
@@ -119,12 +149,18 @@ void mostrarInformacao(char pos[], char pulso[])
 	if(modo ==  ModoScan)
 	{
 		printLCD("Modo Scan"); //se o modo escolhido foi o scan, mostra o scan
+		pulaLinha();
+		printLCD("Pos:");
+		printLCD(pos);
+		printLCD("ï¿½ /");
+		printLCD(pulso);
+		printLCD(" us");
 		return;
 	}
 	
 }
 
-void colocarEstado(int tecla) //função que le a tecla do teclado e escolhe um estado
+void colocarEstado(int tecla) //funï¿½ï¿½o que le a tecla do teclado e escolhe um estado
 {
 	if( tecla == '*') // Se a tecla for *, coloca em Idle
 	{
@@ -137,6 +173,12 @@ void colocarEstado(int tecla) //função que le a tecla do teclado e escolhe um es
 		modo = ModoPosicao;
 	}else
 	{
-		return; // Se não foi cilciado nada, mantêm o ultimo estado
+		return; // Se nï¿½o foi cilciado nada, mantï¿½m o ultimo estado
 	}
+}
+
+void calculaDuty(int angulo)
+{
+	// 0.5 + (angulo * 0.011) de 0.5 ms atÃ© 2.5 ms
+	duty =  40000 + (angulo * 889);
 }

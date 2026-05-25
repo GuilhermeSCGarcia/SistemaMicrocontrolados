@@ -1,184 +1,215 @@
 // main.c
 // Desenvolvido para a placa EK-TM4C1294XL
-// 
-// 
+//
+//
+//
 // Prof. Guilherme Peron
 
 #include <stdint.h>
+#include <stdio.h>
 #include "tm4c1294ncpdt.h"
 
-//Constantes
-#define DISPLAY_X 16 //tamanho X do display
-#define DISPLAY_Y 2 //tamanho Y do display
+// Constantes
+#define DISPLAY_X 16 // tamanho X do display
+#define DISPLAY_Y 2  // tamanho Y do display
 
-// Funï¿½ï¿½es bï¿½sicas
+// Funcoes basicas
 void PLL_Init(void);
 void SysTick_Init(void);
 void SysTick_Wait1ms(uint32_t delay);
 void SysTick_Wait1us(uint32_t delay);
 void GPIO_Init(void);
 
-// Funï¿½ï¿½es do LCD
-void LCD_Init (void);
+// Funcoes do LCD
+void LCD_Init(void);
+void LCD_Reset(void);
 void escreveLCD(int valor);
 void pulaLinha();
 void retornarCursor();
 void printLCD(char c[]);
 void mostrarInformacao(char c1[], char c2[]);
 
-
-//Funï¿½ï¿½es do Sistema
+// Funcoes do Sistema
 void colocarEstado(int tecla);
+void calculaDuty(int angulo);
+void intToStr(int N, char *str);
 
-// Funï¿½ï¿½o do Teclado
+// Funcao do Teclado
 int varreTeclado();
 
 // Variaveis Globais do gpio
-extern int porta;
 extern int angulo;
 extern int duty;
-extern int cima_ou_baixo;
 
-// Estado da mï¿½quina de estados
+// Estado da maquina de estados
 typedef enum estados
 {
-	ModoIdle,
-	ModoPosicao,
-	ModoScan
+    ModoIdle,
+    ModoPosicao,
+    ModoScan
 } Modos;
 
-//Variaveis Globais
-Modos modo = ModoIdle; // inicia a mï¿½quina de estados
-int tecla = '*';  //guarda a tecla, coloca o valor padrï¿½o de *, que ï¿½ o modo Idle
+// Variaveis Globais
+Modos modo = ModoIdle; // inicia a maquina de estados
+Modos modoAnterior;
+int tecla;             // guarda a tecla
+char posS[10];
+char angS[10];
+int pos;
+int ultimaTecla = '*';
 
 int main(void)
 {
-	PLL_Init();
-	SysTick_Init();
-	GPIO_Init(); // jÃ¡ faz o init dos temporizadores tambÃ©m!!
-	LCD_Init();
-	
-	while(1)
-	{
-		//modo atual 
-		//mï¿½quina de estados
-		mostrarInformacao("-","-"); // mostra o modo atual escolhido
-		tecla = varreTeclado(); // busca a tecla escolhida no teclado
-		colocarEstado(tecla); // muda o estado
-		switch (modo)
-		{
-			case ModoIdle:
-				// deliga o timer 2A
-				TIMER2_CTL_R &= ~0x01;
+    PLL_Init();
+    SysTick_Init();
+    GPIO_Init(); // ja faz o init dos temporizadores tambem!!
+    LCD_Init();
 
-				angulo = 90;
-				calculaDuty(angulo);
-				break;
-			
-			case ModoPosicao:
-				// deliga o timer 2A
-				TIMER2_CTL_R &= ~0x01;
-
-				if (tecla == 0)
+    while (1)
+    {
+        // modo atual
+        // maquina de estados
+        tecla = varreTeclado(); // busca a tecla escolhida no teclado
+				if (tecla == 'F')
 				{
-					angulo = 180;
+						tecla = ultimaTecla; // Se não foi pressionado nenhuma tecla, mantêm a a ultima opção clicada
 				}
-				else 
+				else
 				{
-					angulo = (tecla - 1) * 20;
+						ultimaTecla = tecla; // Senão, troca a ultima tecla pela que foi apertada
 				}
-
-				calculaDuty(angulo);
-				int pos;
-				pos = ((0.5 + angulo * 0.01) * 1000);
-				mostrarInformacao(angulo, pos);
-				break;
-			
-			case ModoScan:
-				angulo = 0;
-				calculaDuty(angulo);
-
-				//ligo o timer 2A
-				TIMER2_CTL_R |= 0x01; 
-
-				int pos;
-				pos = ((0.5 + angulo * 0.01) * 1000);
-				mostrarInformacao(angulo, pos);
-				break;
-		}
-	};
+				
 	
+        colocarEstado(tecla);	// Muda o estado
+				if (modo != modoAnterior) //Verifica se trocou de modo
+					{
+						if (modo == ModoScan) //Se trocou de modo, e o modo escolhido foi o scan, precisamos deixar o angulo em zero para começar a varredura
+						{
+							angulo = 0;
+						}
+						modoAnterior = modo; //Preserva o modo escolhido em ultimo modo
+					}
+					
+        switch (modo)
+        {
+            case ModoIdle:
+                mostrarInformacao("-", "-");
+                ultimaTecla = tecla;
+                // desliga o timer 2A
+                TIMER2_CTL_R &= ~0x01;
+
+                angulo = 90;
+                calculaDuty(angulo);
+                break;
+
+            case ModoPosicao:
+                // desliga o timer 2A
+                TIMER2_CTL_R &= ~0x01;
+
+                if (tecla == '0')
+                {
+                    angulo = 180;
+                }
+                else
+                {
+                    angulo = ((tecla - '0') - 1) * 20;
+                }
+
+                calculaDuty(angulo);
+                pos = ((0.5 + angulo * 0.01) * 1000);
+                sprintf(posS, "%d", pos); //Transformo o angulo e a duração do pulso em char para mostrar no display LCD
+                sprintf(angS, "%d", angulo);
+                mostrarInformacao(angS, posS);
+                break;
+
+            case ModoScan:
+                calculaDuty(angulo);
+
+                // ligo o timer 2A
+                TIMER2_CTL_R |= 0x01;
+
+                pos = ((0.5 + angulo * 0.01) * 1000);
+                sprintf(posS, "%d", pos); //Transformo o angulo e a duração do pulso em char para mostrar no display LCD
+                sprintf(angS, "%d", angulo);
+                mostrarInformacao(angS, posS);
+                break;
+        }
+    }
 }
 
-
 // -------------------------------------------------------------------------------
-//Funï¿½ï¿½o escreveLCD
-//Lida com a escrita no LCD
+// Funcao escreveLCD
+// Lida com a escrita no LCD
 void printLCD(char c[])
-{	
-	for (int i = 0; c[i] != '\0'; i++) {
-			escreveLCD((int)c[i]);
-		}
+{
+    for (int i = 0; c[i] != '\0'; i++)
+    {
+        escreveLCD((int)c[i]);
+    }
 }
 
 // -------------------------------------------------------------------------------
-//Funï¿½ï¿½o escreveLCD
-//Lida com a escrita no LCD
+// Funcao escreveLCD
+// Lida com a escrita no LCD
 void mostrarInformacao(char pos[], char pulso[])
-{	
-	LCD_Init();
-	
-	if(modo == ModoIdle) //se o modo escolhi for idle, so mostra idle
-	{
-	printLCD("Modo Idle");
-	return;
-	}
-	
-	if(modo ==  ModoPosicao) // se o modo escolhido for o de posiï¿½ï¿½o, mostra a posiï¿½ï¿½o e o pulso
-	{
-		printLCD("Modo Posicao");
-		pulaLinha();
-		printLCD("Pos:");
-		printLCD(pos);
-		printLCD("ï¿½ /");
-		printLCD(pulso);
-		printLCD(" us");
-		return;
-	}
-	
-	if(modo ==  ModoScan)
-	{
-		printLCD("Modo Scan"); //se o modo escolhido foi o scan, mostra o scan
-		pulaLinha();
-		printLCD("Pos:");
-		printLCD(pos);
-		printLCD("ï¿½ /");
-		printLCD(pulso);
-		printLCD(" us");
-		return;
-	}
-	
+{
+    LCD_Init();
+
+    if (modo == ModoIdle) // se o modo escolhido for idle, so mostra idle
+    {
+        printLCD("Modo Idle");
+        return;
+    }
+
+    if (modo == ModoPosicao) // se o modo escolhido for o de posicao, mostra a posicao e o pulso
+    {
+        printLCD("Modo Posicao");
+        pulaLinha();
+        printLCD("Pos:");
+        printLCD(pos);
+        printLCD("/");
+        printLCD(pulso);
+        printLCD(" us");
+        return;
+    }
+
+    if (modo == ModoScan)
+    {
+        printLCD("Modo Scan"); // se o modo escolhido foi o scan, mostra o scan
+        pulaLinha();
+        printLCD("Pos:");
+        printLCD(pos);
+        printLCD("/");
+        printLCD(pulso);
+        printLCD(" us");
+        return;
+    }
+
+    
 }
 
-void colocarEstado(int tecla) //funï¿½ï¿½o que le a tecla do teclado e escolhe um estado
+void colocarEstado(int tecla) // funcao que le a tecla do teclado e escolhe um estado
 {
-	if( tecla == '*') // Se a tecla for *, coloca em Idle
-	{
-		modo = ModoIdle;
-	}else if (tecla == 'A') // Se for A, coloca em modo scan
-	{
-	modo = ModoScan;
-	}else if(tecla >= '0' && tecla <= '9') // se a tecla tiver no raio entre 0 e 9, coloca no modo posicao
-	{
-		modo = ModoPosicao;
-	}else
-	{
-		return; // Se nï¿½o foi cilciado nada, mantï¿½m o ultimo estado
-	}
+    if (tecla == '*') // se a tecla for *, coloca em Idle
+    {
+        modo = ModoIdle;
+    }
+    else if (tecla == 'A') // se for A, coloca em modo scan
+    {
+        modo = ModoScan;
+    }
+    else if (tecla >= '0' && tecla <= '9') // se a tecla tiver no raio entre 0 e 9, coloca no modo posicao
+    {
+        modo = ModoPosicao;
+    }
+    else
+    {
+        return; // se nao foi clicado nada, mantem o ultimo estado
+    }
 }
 
 void calculaDuty(int angulo)
 {
-	// 0.5 + (angulo * 0.011) de 0.5 ms atÃ© 2.5 ms
-	duty =  40000 + (angulo * 889);
+    // 0.5 + (angulo * 0.011) de 0.5 ms ate 2.5 ms
+    duty = 40000 + (angulo * 889);
 }

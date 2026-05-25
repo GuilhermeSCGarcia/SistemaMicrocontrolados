@@ -16,10 +16,10 @@ void SysTick_Init(void);
 void SysTick_Wait1ms(uint32_t delay);
 void SysTick_Wait1us(uint32_t delay);
 
-int porta = 0;
-int angulo = 0;
-int duty = 40000;
-int cima_ou_baixo = 1;
+volatile int angulo = 0; //Mudei pra volatile porque o angulo não tava alterando entre os arquivos, para tentar solucionar
+volatile int duty = 40000;
+volatile int cima_ou_baixo = 1;
+volatile int porta = 0;
 
 
 // -------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ void GPIO_Init(void)
 	TIMER2_TAMR_R = 0x02;           //Habilitando 2A em peri�dico
 		
 	// 5. Valor que o timer come�a a vai diminuindo (Se 32 bits usa s� o TAILR, se timer B como 16 bits usa TBILR tamb�m)
-	TIMER0_TAILR_R = 55999999;      
-	TIMER2_TAILR_R = 55999999;
+	TIMER0_TAILR_R = 1600000;      // 20ms
+	TIMER2_TAILR_R = 40000000;		 // 500ms
 		
 	// 6. Registrador de preescala, s� usar se for 16 bits, 32 deixa zerado. A (TAPR) e B (TBPR)
 	TIMER0_TAPR_R = 0x00;
@@ -98,8 +98,8 @@ void GPIO_Init(void)
 	TIMER2_IMR_R = 0x01;           //Habilita interrup��o no timer 2A
 	
 	// 8b. Seta a prioridade da interrup��o
-	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 t� no PRI4 e move 29 posi��es pra setar prioridade 4
-	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 t� no PRI5 e move 29 posi��es pra setar prioridade 4
+	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 tá no PRI4 e move 29 posicoes pra setar prioridade 4
+	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 tá no PRI5 e move 29 posicoes pra setar prioridade 4
 	
 	// 8c. Habilitar a interrup��o do timer respectivo no respectivo registrador
 	NVIC_EN0_R = 1 << 19;          // 0A numero 19
@@ -136,6 +136,22 @@ void LCD_Init ()
 	GPIO_PORTM_DATA_R = 0x00;
 	SysTick_Wait1us(40);
 	
+	GPIO_PORTK_DATA_R = 0x01;
+	GPIO_PORTM_DATA_R = 0x04;
+	SysTick_Wait1us(10);
+	GPIO_PORTM_DATA_R = 0x00;
+	SysTick_Wait1ms(2);
+	
+	return;
+}
+
+// -------------------------------------------------------------------------------
+// Fun��o LCD_Init
+// Inicializa o LCD
+// Par�metro de entrada: N�o tem
+// Par�metro de sa�da: N�o tem
+void LCD_Reset ()
+{
 	GPIO_PORTK_DATA_R = 0x01;
 	GPIO_PORTM_DATA_R = 0x04;
 	SysTick_Wait1us(10);

@@ -14,6 +14,7 @@
 #define GPIO_PORTF  (0x0020) //bit 5
 #define GPIO_PORTA  (0x0003) //bit 0 e 1
 #define GPIO_PORTE  (0x0010) //bit 4
+#define GPIO_PORTH  (0x0080) //bit 8
 
 int leitura_conversor;
 // -------------------------------------------------------------------------------
@@ -24,9 +25,9 @@ int leitura_conversor;
 void GPIO_Init(void)
 {
 	//1a. Ativar o clock para a porta setando o bit correspondente no registrador RCGCGPIO
-	SYSCTL_RCGCGPIO_R = (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE);
+	SYSCTL_RCGCGPIO_R = (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE | GPIO_PORTH);
 	//1b.   após isso verificar no PRGPIO se a porta está pronta para uso.
-  while((SYSCTL_PRGPIO_R & (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE) ) != (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE) ){};
+  while((SYSCTL_PRGPIO_R & (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE) ) != (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE | GPIO_PORTH) ){};
 	
 	// 2. Limpar o AMSEL para desabilitar a analógica
 	GPIO_PORTJ_AHB_AMSEL_R = 0x00;
@@ -34,18 +35,21 @@ void GPIO_Init(void)
 	GPIO_PORTF_AHB_AMSEL_R = 0x00;
 	GPIO_PORTA_AHB_AMSEL_R = 0x00;
 	GPIO_PORTE_AHB_AMSEL_R = 0x10;
+	GPIO_PORTH_AHB_AMSEL_R = 0x00;
 		
 	// 3. Limpar PCTL para selecionar o GPIO
 	GPIO_PORTJ_AHB_PCTL_R = 0x00;
 	GPIO_PORTN_PCTL_R = 0x00;
 	GPIO_PORTF_AHB_PCTL_R = 0x00;
 	GPIO_PORTA_AHB_PCTL_R = 0X11;
+	GPIO_PORTH_AHB_PCTL_R = 0x00;
 
 	// 4. DIR para 0 se for entrada, 1 se for saída
 	GPIO_PORTJ_AHB_DIR_R = 0x00;
 	GPIO_PORTN_DIR_R = 0x03; //BIT0 | BIT1 
 	GPIO_PORTF_AHB_DIR_R = 0x11; //BIT 0 | BIT4
 	GPIO_PORTE_AHB_DIR_R = 0x00; // entrada
+	GPIO_PORTH_AHB_DIR_R = 0X04; // BITS H0, H1, H2, H3 saida para controlar o motor de passos
 		
 	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem função alternativa	
 	GPIO_PORTJ_AHB_AFSEL_R = 0x00;
@@ -53,13 +57,15 @@ void GPIO_Init(void)
 	GPIO_PORTF_AHB_AFSEL_R = 0x00;
 	GPIO_PORTA_AHB_AFSEL_R = 0x03;
 	GPIO_PORTE_AHB_AFSEL_R = 0x10;
+	GPIO_PORTH_AHB_AFSEL_R = 0x00;
 		
 	// 6. Setar os bits de DEN para habilitar I/O digital	
 	GPIO_PORTJ_AHB_DEN_R = 0x03;   //Bit0 e bit1
 	GPIO_PORTN_DEN_R = 0x03; 		   //Bit0 e bit1
 	GPIO_PORTF_AHB_DEN_R = 0x11;   //Bit 0 e bit4
 	GPIO_PORTA_AHB_DEN_R = 0x03;
-	GPIO_PORTE_AHB_DEN_R = 0x00; 
+	GPIO_PORTE_AHB_DEN_R = 0x00;
+	GPIO_PORTH_AHB_DEN_R = 0x04;   // BITS H0, H1, H2 E H3	
 	
 	//passos extras
 	SYSCTL_RCGCADC_R = 0x01;
@@ -116,10 +122,10 @@ void UART_Init(void)
 			
 		UART0_CTL_R = 0x00;
 			
-		UART0_IBRD_R = 86;                     // BAUD RATE
-		UART0_FBRD_R = 51;
+		UART0_IBRD_R = 43;                     // BAUD RATE, parte inteira da conta 80000000/(16*115200)
+		UART0_FBRD_R = 51;										// Parte fracionária
 		
-		UART0_LCRH_R = 0x70;		              // Controla as coisas, tipo nº de bits, paridade, etc (8 bits e sem paridade)
+		UART0_LCRH_R = 0x72;		              // Controla as coisas, tipo nº de bits = 8 bits, paridade ímpar e 1 stop bit
 			
 		UART0_CC_R = 0x00;
 			

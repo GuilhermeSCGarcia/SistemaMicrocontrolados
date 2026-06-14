@@ -18,18 +18,18 @@
 
 int leitura_conversor;
 // -------------------------------------------------------------------------------
-// Funï¿½ï¿½o GPIO_Init
+// Função GPIO_Init
 // Inicializa os ports J, N e F
-// Parï¿½metro de entrada: Nï¿½o tem
-// Parï¿½metro de saï¿½da: Nï¿½o tem
+// Parâmetro de entrada: Não tem
+// Parâmetro de saída: Não tem
 void GPIO_Init(void)
 {
 	//1a. Ativar o clock para a porta setando o bit correspondente no registrador RCGCGPIO
 	SYSCTL_RCGCGPIO_R = (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE | GPIO_PORTH);
-	//1b.   apï¿½s isso verificar no PRGPIO se a porta estï¿½ pronta para uso.
+	//1b.   após isso verificar no PRGPIO se a porta está pronta para uso.
   while((SYSCTL_PRGPIO_R & (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE) ) != (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE | GPIO_PORTH) ){};
 	
-	// 2. Limpar o AMSEL para desabilitar a analï¿½gica
+	// 2. Limpar o AMSEL para desabilitar a analógica
 	GPIO_PORTJ_AHB_AMSEL_R = 0x00;
 	GPIO_PORTN_AMSEL_R = 0x00;
 	GPIO_PORTF_AHB_AMSEL_R = 0x00;
@@ -44,14 +44,14 @@ void GPIO_Init(void)
 	GPIO_PORTA_AHB_PCTL_R = 0X11;
 	GPIO_PORTH_AHB_PCTL_R = 0x00;
 
-	// 4. DIR para 0 se for entrada, 1 se for saï¿½da
+	// 4. DIR para 0 se for entrada, 1 se for saída
 	GPIO_PORTJ_AHB_DIR_R = 0x00;
 	GPIO_PORTN_DIR_R = 0x03; //BIT0 | BIT1 
 	GPIO_PORTF_AHB_DIR_R = 0x11; //BIT 0 | BIT4
 	GPIO_PORTE_AHB_DIR_R = 0x00; // entrada
 	GPIO_PORTH_AHB_DIR_R = 0X04; // BITS H0, H1, H2, H3 saida para controlar o motor de passos
 		
-	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem funï¿½ï¿½o alternativa	
+	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem função alternativa	
 	GPIO_PORTJ_AHB_AFSEL_R = 0x00;
 	GPIO_PORTN_AFSEL_R = 0x00; 
 	GPIO_PORTF_AHB_AFSEL_R = 0x00;
@@ -89,10 +89,10 @@ void GPIO_Init(void)
 	// 7. Habilitar resistor de pull-up interno, setar PUR para 1
 	GPIO_PORTJ_AHB_PUR_R = 0x03;   //Bit0 e bit1
 	
-	//8. Habilita a interrupï¿½ï¿½o
+	//8. Habilita a interrupção
 	GPIO_PORTJ_AHB_IM_R = 0x00;
 	
-	//9. Borda ou nï¿½vel
+	//9. Borda ou nível
 	GPIO_PORTJ_AHB_IS_R = 0x00;
 	
 	//10. Uma borda ou ambas as bordas
@@ -123,9 +123,9 @@ void UART_Init(void)
 		UART0_CTL_R = 0x00;
 			
 		UART0_IBRD_R = 43;                     // BAUD RATE, parte inteira da conta 80000000/(16*115200)
-		UART0_FBRD_R = 51;										// Parte fracionï¿½ria
+		UART0_FBRD_R = 51;										// Parte fracionária
 		
-		UART0_LCRH_R = 0x72;		              // Controla as coisas, tipo nï¿½ de bits = 8 bits, paridade ï¿½mpar e 1 stop bit
+		UART0_LCRH_R = 0x72;		              // Controla as coisas, tipo nº de bits = 8 bits, paridade ímpar e 1 stop bit
 			
 		UART0_CC_R = 0x00;
 			
@@ -133,43 +133,43 @@ void UART_Init(void)
 }
 
 // -------------------------------------------------------------------------------
-// Funï¿½ï¿½o PortJ_Input
-// Lï¿½ os valores de entrada do port J
-// Parï¿½metro de entrada: Nï¿½o tem
-// Parï¿½metro de saï¿½da: o valor da leitura do port
+// Função PortJ_Input
+// Lê os valores de entrada do port J
+// Parâmetro de entrada: Não tem
+// Parâmetro de saída: o valor da leitura do port
 uint32_t PortJ_Input(void)
 {
 	return GPIO_PORTJ_AHB_DATA_R;
 }
 
 // -------------------------------------------------------------------------------
-// Funï¿½ï¿½o PortN_Output
+// Função PortN_Output
 // Escreve os valores no port N
-// Parï¿½metro de entrada: Valor a ser escrito
-// Parï¿½metro de saï¿½da: nï¿½o tem
+// Parâmetro de entrada: Valor a ser escrito
+// Parâmetro de saída: não tem
 void PortN_Output(uint32_t valor)
 {
     uint32_t temp;
     //vamos zerar somente os bits menos significativos
-    //para uma escrita amigï¿½vel nos bits 0 e 1
+    //para uma escrita amigável nos bits 0 e 1
     temp = GPIO_PORTN_DATA_R & 0xFC;
-    //agora vamos fazer o OR com o valor recebido na funï¿½ï¿½o
+    //agora vamos fazer o OR com o valor recebido na função
     temp = temp | valor;
     GPIO_PORTN_DATA_R = temp; 
 }
 
 // -------------------------------------------------------------------------------
-// Funï¿½ï¿½o PortF_Output
+// Função PortF_Output
 // Escreve os valores no port F
-// Parï¿½metro de entrada: Valor a ser escrito
-// Parï¿½metro de saï¿½da: nï¿½o tem
+// Parâmetro de entrada: Valor a ser escrito
+// Parâmetro de saída: não tem
 void PortF_Output(uint32_t valor)
 {
     uint32_t temp;
     //vamos zerar somente os bits menos significativos
-    //para uma escrita amigï¿½vel nos bits 0 e 1
+    //para uma escrita amigável nos bits 0 e 1
     temp = GPIO_PORTF_AHB_DATA_R & 0xEE;
-    //agora vamos fazer o OR com o valor recebido na funï¿½ï¿½o
+    //agora vamos fazer o OR com o valor recebido na função
     temp = temp | valor;
     GPIO_PORTF_AHB_DATA_R = temp; 
 }
@@ -184,7 +184,7 @@ uint32_t PORTN_data()
 	return GPIO_PORTN_DATA_R;
 }
 
-//Interrupï¿½ï¿½o
+//Interrupção
 
 
 int receber_dados()
@@ -194,15 +194,6 @@ int receber_dados()
 	}
 	
 	return UART0_DR_R;
-}
-
-int receber_dados_nao_bloqueante()
-{
-		//se a fila nï¿½o tiver dado, ele nï¿½o vai ter nada escrito na fifo, retorna -1 para a variavel que controla se tem dado
-    if (UART0_FR_R & 0x10) {
-        return 0 ;
-    }
-    return UART0_DR_R ;
 }
 
 void enviar_dados(int mensagem)

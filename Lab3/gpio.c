@@ -17,6 +17,16 @@
 #define GPIO_PORTH  (0x0080) //bit 8
 
 int leitura_conversor;
+void SysTick_Wait1ms(uint32_t delay);
+volatile int pos_atual = 0;
+
+// movimentacao do motor de passo
+int calcula_passos (int angulo);
+void gira_passo_direita(int angulo);
+void gira_passo_esquerda(int angulo);
+void gira_meio_passo_direita(int passos);
+void gira_meio_passo_esquerda(int passos);
+
 // -------------------------------------------------------------------------------
 // Função GPIO_Init
 // Inicializa os ports J, N e F
@@ -115,6 +125,56 @@ void GPIO_Init(void)
 	
 }	
 
+void Temporizador_Init()
+{
+	// Parte dos temporizadores
+	
+	// 1. Ativar o clock do temporizador 
+	SYSCTL_RCGCTIMER_R = 0x05;           // timer 0 e timer 2
+	// 1. Verificar o bit do temporizador respectivo no registrador PRTIMER para saber se est? pronto para o uso
+	while (SYSCTL_PRTIMER_R != 0x05) {}; //pro 0 e 2 ao mesmo tempo
+		
+	// 2. Habilita timer A ou B
+	TIMER0_CTL_R = 0x00;		   // Habilitando o 0A
+	TIMER2_CTL_R = 0x00;           // Habilitando o 2A
+		
+	// 3. Configura de quantos bits ser? a contagem (16 bits = 0x04 e 32 bits = 0x00)
+	TIMER0_CFG_R = 0x00;           //Habilitando 32 bits
+	TIMER2_CFG_R = 0x00;           //Habilitando 32 bits
+		
+	// 4. Configura modo de opera??o (Oneshot = 0x1 e Peri?dico 0x2)
+	TIMER0_TAMR_R = 0x02;           //Habilitando 0A em peri?dico
+	TIMER2_TAMR_R = 0x02;           //Habilitando 2A em peri?dico
+		
+	// 5. Valor que o timer come?a a vai diminuindo (Se 32 bits usa s? o TAILR, se timer B como 16 bits usa TBILR tamb?m)
+	TIMER0_TAILR_R = 16000000;      // 200ms
+	TIMER2_TAILR_R = 40000000;		  // 500ms 
+		
+	// 6. Registrador de preescala, s? usar se for 16 bits, 32 deixa zerado. A (TAPR) e B (TBPR)
+	TIMER0_TAPR_R = 0x00;
+	TIMER2_TAPR_R = 0x00;
+		
+	// 7. Limpa a interrup??o (ACK) (escreve 1 onde quer limpar!!)
+	TIMER0_ICR_R = 0x01;            //Limpa pro timer 0A
+	TIMER2_ICR_R = 0x01;            //Limpa pro timer 2A
+		
+	// 8a. Controla a interrup??o 
+	TIMER0_IMR_R = 0x01;				   //Habilita interrup??o no timer 0A
+	TIMER2_IMR_R = 0x01;           //Habilita interrup??o no timer 2A
+	
+	// 8b. Seta a prioridade da interrup??o
+	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 tá no PRI4 e move 29 posicoes pra setar prioridade 4
+	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 tá no PRI5 e move 29 posicoes pra setar prioridade 4
+	
+	// 8c. Habilitar a interrup??o do timer respectivo no respectivo registrador
+	NVIC_EN0_R = 1 << 19;          // 0A numero 19
+	NVIC_EN0_R |= 1 << 23;         // | pra manter o que coloquei antes, 2A numero 23
+	
+	// 9. Coloca 1 pra habilitar e come?ar a contagem
+	TIMER0_CTL_R = 0x00;           // começa desligado
+	TIMER2_CTL_R = 0x00;           // começa desligado
+	
+}
 void UART_Init(void)
 {
 		SYSCTL_RCGCUART_R = 0x01;              // Habilita o UART 0
@@ -132,60 +192,6 @@ void UART_Init(void)
 		UART0_CTL_R = 0x301;
 }
 
-// -------------------------------------------------------------------------------
-// Função PortJ_Input
-// Lê os valores de entrada do port J
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: o valor da leitura do port
-uint32_t PortJ_Input(void)
-{
-	return GPIO_PORTJ_AHB_DATA_R;
-}
-
-// -------------------------------------------------------------------------------
-// Função PortN_Output
-// Escreve os valores no port N
-// Parâmetro de entrada: Valor a ser escrito
-// Parâmetro de saída: não tem
-void PortN_Output(uint32_t valor)
-{
-    uint32_t temp;
-    //vamos zerar somente os bits menos significativos
-    //para uma escrita amigável nos bits 0 e 1
-    temp = GPIO_PORTN_DATA_R & 0xFC;
-    //agora vamos fazer o OR com o valor recebido na função
-    temp = temp | valor;
-    GPIO_PORTN_DATA_R = temp; 
-}
-
-// -------------------------------------------------------------------------------
-// Função PortF_Output
-// Escreve os valores no port F
-// Parâmetro de entrada: Valor a ser escrito
-// Parâmetro de saída: não tem
-void PortF_Output(uint32_t valor)
-{
-    uint32_t temp;
-    //vamos zerar somente os bits menos significativos
-    //para uma escrita amigável nos bits 0 e 1
-    temp = GPIO_PORTF_AHB_DATA_R & 0xEE;
-    //agora vamos fazer o OR com o valor recebido na função
-    temp = temp | valor;
-    GPIO_PORTF_AHB_DATA_R = temp; 
-}
-
-uint32_t PORTF_data()
-{
-	return GPIO_PORTF_AHB_DATA_R;
-}
-
-uint32_t PORTN_data()
-{
-	return GPIO_PORTN_DATA_R;
-}
-
-//Interrupção
-
 
 int receber_dados()
 {
@@ -194,6 +200,15 @@ int receber_dados()
 	}
 	
 	return UART0_DR_R;
+}
+
+int receber_dados_nao_bloqueante()
+{
+		//se a fila nao tiver dado, ele nao vai ter nada escrito na fifo, retorna -1 para a variavel que controla se tem dado
+    if (UART0_FR_R & 0x10) {
+        return 0 ;
+    }
+    return UART0_DR_R ;
 }
 
 void enviar_dados(int mensagem)
@@ -220,3 +235,168 @@ int converter_ad()
 	return leitura_conversor;
 }
 
+unsigned int seq_direita_meio[8]={
+1000,
+1100,
+0100,
+0110,
+0010,
+0011,
+0001,
+1001
+};
+
+unsigned int seq_esquerda_meio[8]={
+1001,
+0001,
+0011,
+0010,
+0110,
+0100,
+1100,
+1000
+};
+
+unsigned int seq_direita_inteiro[4]={
+1000,
+0100,
+0010,
+0001
+};
+
+unsigned int seq_esquerda_inteiro[4]={
+0001,
+0010,
+0100,
+1000
+};
+
+
+// -------------------------------------------------------------------------------
+// Função gira_meio_passo
+// Manda girar o motor x passos de meio passo a partir do 0
+// Parâmetro de entrada: Passos
+// Parâmetro de saída: não tem
+void gira_meio_passo(int passos)
+{
+	int passos_restante;
+	
+	// se o valor que quero ir é mais longe, calculo quanto falta pra ir
+	if (passos > pos_atual)
+	{
+		passos_restante = passos - pos_atual;
+		pos_atual = passos;
+		gira_meio_passo_direita(passos_restante);
+	}
+	// se o valor que quero ir é mais perto, calculo quanto tem que voltar
+	else 
+	{
+		passos_restante = pos_atual - passos;
+		pos_atual = passos;
+		gira_meio_passo_esquerda(passos_restante);
+	}
+}
+
+
+// -------------------------------------------------------------------------------
+// Função gira_passo_direita
+// Gira o motor x angulo sentido horário
+// Parâmetro de entrada: Angulo
+// Parâmetro de saída: não tem
+void gira_passo_direita(int angulo)
+{
+	static int indice = 0;
+	
+	int passos;
+	passos = calcula_passos(angulo);
+	for(int i = 0; i < passos; i++)
+	{
+		GPIO_PORTH_AHB_DATA_R = seq_direita_inteiro[indice];
+		//pra ir até o 3 e depois voltar pro 0
+		indice = (indice + 1) % 4;
+		//espera 5ms pra energizar a próxima
+		SysTick_Wait1ms(5);
+	}
+}
+
+
+// -------------------------------------------------------------------------------
+// Função gira_passo_esquerda
+// Gira o motor x angulo sentido antihorário
+// Parâmetro de entrada: Angulo
+// Parâmetro de saída: não tem
+void gira_passo_esquerda(int angulo)
+{
+	static int indice = 0;
+	
+	int passos;
+	passos = calcula_passos(angulo);
+	for(int i = 0; i < passos; i++)
+	{
+		GPIO_PORTH_AHB_DATA_R = seq_esquerda_inteiro[indice];
+		//pra ir até o 3 e depois voltar pro 0
+		indice = (indice + 1) % 4;
+		//espera 5ms pra energizar a próxima
+		SysTick_Wait1ms(5);
+	}
+}
+
+
+// -------------------------------------------------------------------------------
+// Função gira_meio_passo_direita
+// Gira o motor x passos sentido horário
+// Parâmetro de entrada: Passos
+// Parâmetro de saída: não tem
+void gira_meio_passo_direita(int passos)
+{
+	  static int indice = 0;
+		for(int i = 0; i < passos; i++)
+		{
+			GPIO_PORTH_AHB_DATA_R = seq_direita_meio[indice];
+			//pra ir até o 7 e depois voltar pro 0
+			indice = (indice + 1) % 8;
+			//espera 5ms pra energizar a próxima
+			SysTick_Wait1ms(5);
+		}
+}
+
+
+// -------------------------------------------------------------------------------
+// Função gira_meio_passo_esquerda
+// Gira o motor x passos sentido antihorário
+// Parâmetro de entrada: Passos
+// Parâmetro de saída: não tem
+void gira_meio_passo_esquerda(int passos)
+{
+	  static int indice = 0;
+		for(int i = 0; i < passos; i++)
+		{
+			GPIO_PORTH_AHB_DATA_R = seq_esquerda_meio[indice];
+			//pra ir até o 7 e depois voltar pro 0
+			indice = (indice + 1) % 8;
+			//espera 5ms pra energizar a próxima
+			SysTick_Wait1ms(5);
+		}
+}
+
+
+// -------------------------------------------------------------------------------
+// Funcao Iimer0A_Handler
+// Lida com a interrupcao do timer 0A (do PWM)
+// Parametro de entrada: Nao tem
+// Parametro de saida: Nao tem
+void Timer0A_Handler () 
+{
+	//limpando o ack da interrup??o
+	TIMER0_ICR_R = 0x01;
+	
+	// leio o potenciômetro
+	leitura_conversor = converter_ad();
+	// gira o tanto que eu li
+	gira_meio_passo(leitura_conversor); 
+}
+
+int calcula_passos (int angulo)
+{
+	return ((angulo * 4096) / 360);
+}

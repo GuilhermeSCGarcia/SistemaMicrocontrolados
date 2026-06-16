@@ -26,6 +26,7 @@ void gira_passo_direita(int angulo);
 void gira_passo_esquerda(int angulo);
 void gira_meio_passo_direita(int passos);
 void gira_meio_passo_esquerda(int passos);
+void mostra_pos();
 
 // -------------------------------------------------------------------------------
 // Função GPIO_Init
@@ -306,17 +307,28 @@ void gira_meio_passo(int passos)
 void gira_passo_direita(int angulo)
 {
 	static int indice = 0;
-	
+	int attPos = 0; //controla o tempo para mostrar a atualização parcial dos passos do motor
 	int passos;
 	passos = calcula_passos(angulo);
+	
 	for(int i = 0; i < passos; i++)
 	{
+		pos_atual = (pos_atual - 1 + 4096) % 4096; //atualiza a pos atual do motor conforme o motor gira
 		GPIO_PORTH_AHB_DATA_R = seq_direita_inteiro[indice];
 		//pra ir até o 3 e depois voltar pro 0
 		indice = (indice + 1) % 4;
 		//espera 5ms pra energizar a próxima
 		SysTick_Wait1ms(5);
+		
+		attPos = (attPos + 1) % 200; //Quando completa 200 passos, o valor atualização e no total vai ter passado 1 segundo
+		
+		if(attPos == 199)
+		{
+			mostra_pos(); //mostra uma parcial do motor
+		}
+	
 	}
+
 }
 
 
@@ -328,16 +340,19 @@ void gira_passo_direita(int angulo)
 void gira_passo_esquerda(int angulo)
 {
 	static int indice = 0;
+	int attPos = 0; //controla o tempo para mostrar a atualização parcial dos passos do motor
 	
 	int passos;
 	passos = calcula_passos(angulo);
 	for(int i = 0; i < passos; i++)
 	{
+		pos_atual = (pos_atual + 1) % 4096; //atualiza a pos atual do motor conforme o motor gira
 		GPIO_PORTH_AHB_DATA_R = seq_esquerda_inteiro[indice];
 		//pra ir até o 3 e depois voltar pro 0
 		indice = (indice + 1) % 4;
 		//espera 5ms pra energizar a próxima
 		SysTick_Wait1ms(5);
+		mostra_pos(); //mostra uma parcial do motor
 	}
 }
 

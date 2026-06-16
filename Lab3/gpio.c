@@ -29,18 +29,18 @@ void gira_meio_passo_esquerda(int passos);
 void mostra_pos();
 
 // -------------------------------------------------------------------------------
-// Função GPIO_Init
+// Funï¿½ï¿½o GPIO_Init
 // Inicializa os ports J, N e F
-// Parâmetro de entrada: Não tem
-// Parâmetro de saída: Não tem
+// Parï¿½metro de entrada: Nï¿½o tem
+// Parï¿½metro de saï¿½da: Nï¿½o tem
 void GPIO_Init(void)
 {
 	//1a. Ativar o clock para a porta setando o bit correspondente no registrador RCGCGPIO
 	SYSCTL_RCGCGPIO_R = (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE | GPIO_PORTH);
-	//1b.   após isso verificar no PRGPIO se a porta está pronta para uso.
+	//1b.   apï¿½s isso verificar no PRGPIO se a porta estï¿½ pronta para uso.
   while((SYSCTL_PRGPIO_R & (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE) ) != (GPIO_PORTJ | GPIO_PORTN | GPIO_PORTF | GPIO_PORTA | GPIO_PORTE | GPIO_PORTH) ){};
 	
-	// 2. Limpar o AMSEL para desabilitar a analógica
+	// 2. Limpar o AMSEL para desabilitar a analï¿½gica
 	GPIO_PORTJ_AHB_AMSEL_R = 0x00;
 	GPIO_PORTN_AMSEL_R = 0x00;
 	GPIO_PORTF_AHB_AMSEL_R = 0x00;
@@ -55,14 +55,14 @@ void GPIO_Init(void)
 	GPIO_PORTA_AHB_PCTL_R = 0X11;
 	GPIO_PORTH_AHB_PCTL_R = 0x00;
 
-	// 4. DIR para 0 se for entrada, 1 se for saída
+	// 4. DIR para 0 se for entrada, 1 se for saï¿½da
 	GPIO_PORTJ_AHB_DIR_R = 0x00;
 	GPIO_PORTN_DIR_R = 0x03; //BIT0 | BIT1 
 	GPIO_PORTF_AHB_DIR_R = 0x11; //BIT 0 | BIT4
 	GPIO_PORTE_AHB_DIR_R = 0x00; // entrada
 	GPIO_PORTH_AHB_DIR_R = 0X04; // BITS H0, H1, H2, H3 saida para controlar o motor de passos
 		
-	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem função alternativa	
+	// 5. Limpar os bits AFSEL para 0 para selecionar GPIO sem funï¿½ï¿½o alternativa	
 	GPIO_PORTJ_AHB_AFSEL_R = 0x00;
 	GPIO_PORTN_AFSEL_R = 0x00; 
 	GPIO_PORTF_AHB_AFSEL_R = 0x00;
@@ -100,10 +100,10 @@ void GPIO_Init(void)
 	// 7. Habilitar resistor de pull-up interno, setar PUR para 1
 	GPIO_PORTJ_AHB_PUR_R = 0x03;   //Bit0 e bit1
 	
-	//8. Habilita a interrupção
+	//8. Habilita a interrupï¿½ï¿½o
 	GPIO_PORTJ_AHB_IM_R = 0x00;
 	
-	//9. Borda ou nível
+	//9. Borda ou nï¿½vel
 	GPIO_PORTJ_AHB_IS_R = 0x00;
 	
 	//10. Uma borda ou ambas as bordas
@@ -164,16 +164,16 @@ void Temporizador_Init()
 	TIMER2_IMR_R = 0x01;           //Habilita interrup??o no timer 2A
 	
 	// 8b. Seta a prioridade da interrup??o
-	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 tá no PRI4 e move 29 posicoes pra setar prioridade 4
-	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 tá no PRI5 e move 29 posicoes pra setar prioridade 4
+	NVIC_PRI4_R = 4 << 29;         //PRI4 porque tem o numero 19 e o 19 tï¿½ no PRI4 e move 29 posicoes pra setar prioridade 4
+	NVIC_PRI5_R = 4 << 29;         //PRI5 porque tem o numero 23 e o 23 tï¿½ no PRI5 e move 29 posicoes pra setar prioridade 4
 	
 	// 8c. Habilitar a interrup??o do timer respectivo no respectivo registrador
 	NVIC_EN0_R = 1 << 19;          // 0A numero 19
 	NVIC_EN0_R |= 1 << 23;         // | pra manter o que coloquei antes, 2A numero 23
 	
 	// 9. Coloca 1 pra habilitar e come?ar a contagem
-	TIMER0_CTL_R = 0x00;           // começa desligado
-	TIMER2_CTL_R = 0x00;           // começa desligado
+	TIMER0_CTL_R = 0x00;           // comeï¿½a desligado
+	TIMER2_CTL_R = 0x00;           // comeï¿½a desligado
 	
 }
 void UART_Init(void)
@@ -184,9 +184,9 @@ void UART_Init(void)
 		UART0_CTL_R = 0x00;
 			
 		UART0_IBRD_R = 43;                     // BAUD RATE, parte inteira da conta 80000000/(16*115200)
-		UART0_FBRD_R = 51;										// Parte fracionária
+		UART0_FBRD_R = 51;										// Parte fracionï¿½ria
 		
-		UART0_LCRH_R = 0x72;		              // Controla as coisas, tipo nº de bits = 8 bits, paridade ímpar e 1 stop bit
+		UART0_LCRH_R = 0x72;		              // Controla as coisas, tipo nï¿½ de bits = 8 bits, paridade ï¿½mpar e 1 stop bit
 			
 		UART0_CC_R = 0x00;
 			
@@ -205,7 +205,7 @@ int receber_dados()
 
 int receber_dados_nao_bloqueante()
 {
-		//se a fila nao tiver dado, ele nao vai ter nada escrito na fifo, retorna -1 para a variavel que controla se tem dado
+		//se a fila nï¿½o tiver dado, ele nï¿½o vai ter nada escrito na fifo, retorna -1 para a variavel que controla se tem dado
     if (UART0_FR_R & 0x10) {
         return 0 ;
     }
@@ -274,22 +274,22 @@ unsigned int seq_esquerda_inteiro[4]={
 
 
 // -------------------------------------------------------------------------------
-// Função gira_meio_passo
+// Funï¿½ï¿½o gira_meio_passo
 // Manda girar o motor x passos de meio passo a partir do 0
-// Parâmetro de entrada: Passos
-// Parâmetro de saída: não tem
+// Parï¿½metro de entrada: Passos
+// Parï¿½metro de saï¿½da: nï¿½o tem
 void gira_meio_passo(int passos)
 {
 	int passos_restante;
 	
-	// se o valor que quero ir é mais longe, calculo quanto falta pra ir
+	// se o valor que quero ir ï¿½ mais longe, calculo quanto falta pra ir
 	if (passos > pos_atual)
 	{
 		passos_restante = passos - pos_atual;
 		pos_atual = passos;
 		gira_meio_passo_direita(passos_restante);
 	}
-	// se o valor que quero ir é mais perto, calculo quanto tem que voltar
+	// se o valor que quero ir ï¿½ mais perto, calculo quanto tem que voltar
 	else 
 	{
 		passos_restante = pos_atual - passos;
@@ -300,14 +300,14 @@ void gira_meio_passo(int passos)
 
 
 // -------------------------------------------------------------------------------
-// Função gira_passo_direita
-// Gira o motor x angulo sentido horário
-// Parâmetro de entrada: Angulo
-// Parâmetro de saída: não tem
+// Funï¿½ï¿½o gira_passo_direita
+// Gira o motor x angulo sentido horï¿½rio
+// Parï¿½metro de entrada: Angulo
+// Parï¿½metro de saï¿½da: nï¿½o tem
 void gira_passo_direita(int angulo)
 {
 	static int indice = 0;
-	int attPos = 0; //controla o tempo para mostrar a atualização parcial dos passos do motor
+	int attPos = 0; //controla o tempo para mostrar a atualizaï¿½ï¿½o parcial dos passos do motor
 	int passos;
 	passos = calcula_passos(angulo);
 	
@@ -315,12 +315,12 @@ void gira_passo_direita(int angulo)
 	{
 		pos_atual = (pos_atual - 1 + 4096) % 4096; //atualiza a pos atual do motor conforme o motor gira
 		GPIO_PORTH_AHB_DATA_R = seq_direita_inteiro[indice];
-		//pra ir até o 3 e depois voltar pro 0
+		//pra ir atï¿½ o 3 e depois voltar pro 0
 		indice = (indice + 1) % 4;
-		//espera 5ms pra energizar a próxima
+		//espera 5ms pra energizar a prï¿½xima
 		SysTick_Wait1ms(5);
 		
-		attPos = (attPos + 1) % 200; //Quando completa 200 passos, o valor atualização e no total vai ter passado 1 segundo
+		attPos = (attPos + 1) % 200; //Quando completa 200 passos, o valor atualizaï¿½ï¿½o e no total vai ter passado 1 segundo
 		
 		if(attPos == 199)
 		{
@@ -333,14 +333,14 @@ void gira_passo_direita(int angulo)
 
 
 // -------------------------------------------------------------------------------
-// Função gira_passo_esquerda
-// Gira o motor x angulo sentido antihorário
-// Parâmetro de entrada: Angulo
-// Parâmetro de saída: não tem
+// Funï¿½ï¿½o gira_passo_esquerda
+// Gira o motor x angulo sentido antihorï¿½rio
+// Parï¿½metro de entrada: Angulo
+// Parï¿½metro de saï¿½da: nï¿½o tem
 void gira_passo_esquerda(int angulo)
 {
 	static int indice = 0;
-	int attPos = 0; //controla o tempo para mostrar a atualização parcial dos passos do motor
+	int attPos = 0; //controla o tempo para mostrar a atualizaï¿½ï¿½o parcial dos passos do motor
 	
 	int passos;
 	passos = calcula_passos(angulo);
@@ -348,48 +348,56 @@ void gira_passo_esquerda(int angulo)
 	{
 		pos_atual = (pos_atual + 1) % 4096; //atualiza a pos atual do motor conforme o motor gira
 		GPIO_PORTH_AHB_DATA_R = seq_esquerda_inteiro[indice];
-		//pra ir até o 3 e depois voltar pro 0
+		//pra ir atï¿½ o 3 e depois voltar pro 0
 		indice = (indice + 1) % 4;
-		//espera 5ms pra energizar a próxima
+		//espera 5ms pra energizar a prï¿½xima
 		SysTick_Wait1ms(5);
-		mostra_pos(); //mostra uma parcial do motor
+
+		attPos = (attPos + 1) % 200; //Quando completa 200 passos, o valor atualizaï¿½ï¿½o e no total vai ter passado 1 segundo
+
+
+		if(attPos == 199)
+		{
+			mostra_pos(); //mostra uma parcial do motor
+		}
+		
 	}
 }
 
 
 // -------------------------------------------------------------------------------
-// Função gira_meio_passo_direita
-// Gira o motor x passos sentido horário
-// Parâmetro de entrada: Passos
-// Parâmetro de saída: não tem
+// Funï¿½ï¿½o gira_meio_passo_direita
+// Gira o motor x passos sentido horï¿½rio
+// Parï¿½metro de entrada: Passos
+// Parï¿½metro de saï¿½da: nï¿½o tem
 void gira_meio_passo_direita(int passos)
 {
 	  static int indice = 0;
 		for(int i = 0; i < passos; i++)
 		{
 			GPIO_PORTH_AHB_DATA_R = seq_direita_meio[indice];
-			//pra ir até o 7 e depois voltar pro 0
+			//pra ir atï¿½ o 7 e depois voltar pro 0
 			indice = (indice + 1) % 8;
-			//espera 5ms pra energizar a próxima
+			//espera 5ms pra energizar a prï¿½xima
 			SysTick_Wait1ms(5);
 		}
 }
 
 
 // -------------------------------------------------------------------------------
-// Função gira_meio_passo_esquerda
-// Gira o motor x passos sentido antihorário
-// Parâmetro de entrada: Passos
-// Parâmetro de saída: não tem
+// Funï¿½ï¿½o gira_meio_passo_esquerda
+// Gira o motor x passos sentido antihorï¿½rio
+// Parï¿½metro de entrada: Passos
+// Parï¿½metro de saï¿½da: nï¿½o tem
 void gira_meio_passo_esquerda(int passos)
 {
 	  static int indice = 0;
 		for(int i = 0; i < passos; i++)
 		{
 			GPIO_PORTH_AHB_DATA_R = seq_esquerda_meio[indice];
-			//pra ir até o 7 e depois voltar pro 0
+			//pra ir atï¿½ o 7 e depois voltar pro 0
 			indice = (indice + 1) % 8;
-			//espera 5ms pra energizar a próxima
+			//espera 5ms pra energizar a prï¿½xima
 			SysTick_Wait1ms(5);
 		}
 }
@@ -405,7 +413,7 @@ void Timer0A_Handler ()
 	//limpando o ack da interrup??o
 	TIMER0_ICR_R = 0x01;
 	
-	// leio o potenciômetro
+	// leio o potenciï¿½metro
 	leitura_conversor = converter_ad();
 	// gira o tanto que eu li
 	gira_meio_passo(leitura_conversor); 
